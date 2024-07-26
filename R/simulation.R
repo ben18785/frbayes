@@ -95,145 +95,77 @@ simulate <- function(n_replicates, n_prey_initial, time_max, model, parameters) 
   result
 }
 
-#' Generate a Constant Rate Model for Prey-Predator Simulation
+#' Simulate a Study with Multiple Prey Initial Conditions
 #'
-#' This function returns a model function where the rate of prey consumption
-#' is constant and proportional to the current number of prey. The returned function
-#' can be used in simulations of prey-predator interactions.
+#' This function performs simulations for a study based on varying initial prey counts.
+#' It uses a provided model and parameters to generate simulation results and combines
+#' these results into a single dataframe.
 #'
-#' @return A function that computes the propensity of prey consumption based on the current
-#' number of prey and a set of parameters. The returned function takes two arguments:
-#' \describe{
-#'   \item{prey}{Integer representing the current number of prey.}
-#'   \item{parameters}{A list containing the parameters for the model. Must include:}
-#'     \describe{
-#'       \item{rate}{A numeric value representing the constant rate of prey consumption per prey.}
-#'     }
-#' }
+#' @param data A dataframe containing the study parameters. It must include the following columns:
+#'   \itemize{
+#'     \item \code{prey_initial}: An integer indicating the initial density of prey.
+#'     \item \code{n_replicates}: An integer specifying the number of replicates for each \code{prey_initial}.
+#'   }
+#' @param time_max A positive numeric value specifying the maximum time for the simulation.
+#' @param model A function representing the model to be used in the simulation.
+#' @param parameters A list of parameters to be passed to the model function.
+#'
+#' @return A dataframe containing the simulation results.
+#'
+#' @details
+#' The function first validates the inputs to ensure they meet the required specifications.
+#' It then iterates over unique values of initial prey density, performs simulations for
+#' each value, and combines all results into a single dataframe.
+#'
+#' If the dataframe has more than one row per unique \code{prey_initial} value or
+#' if any other input validations fail, the function will stop with an error message.
 #'
 #' @examples
-#' model <- model_constant_rate()
+#' # Example usage (assuming appropriate model and parameters):
+#' data <- data.frame(prey_initial = c(10, 20, 30), n_replicates = c(100, 100, 100))
+#' time_max <- 10
+#' model <- model_constant()
 #' parameters <- list(rate = 0.1)
-#' model(10, parameters)  # Returns 1.0
-#'
+#' result <- simulate_study(data, time_max, model, parameters)
 #' @export
-model_constant_rate <- function() {
-  function(prey, parameters) {
-    rate <- parameters$rate
-    rate * prey
+simulate_study <- function(data, time_max, model, parameters) {
+
+  if (!is.data.frame(data) || !("n_prey_initial" %in% colnames(data)) || !("n_replicates" %in% colnames(data))) {
+    stop("`data` must be a dataframe containing columns 'n_prey_initial' and 'n_replicates'.")
   }
-}
 
-
-# from supplementary here: https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.13039
-
-#' Generate a Rogers II Model Function for Prey-Predator Simulation
-#'
-#' This function returns a model function based on the Rogers II model, where the rate of prey consumption
-#' is described by a functional response that depends on the current number of prey and two parameters:
-#' `a` (the maximum rate of consumption) and `h` (the handling time).
-#'
-#' The Rogers II model is defined as:
-#' \deqn{ \text{rate} = \frac{a \cdot \text{prey}}{1 + a \cdot h \cdot \text{prey}} }
-#' where \code{a} is the maximum rate of consumption and \code{h} is the handling time.
-#'
-#' @return A function that calculates the propensity of prey consumption based on the current
-#' number of prey and a set of parameters. The returned function takes two arguments:
-#' \describe{
-#'   \item{prey}{Numeric representing the current number of prey.}
-#'   \item{parameters}{A list containing the parameters for the model. Must include:}
-#'     \describe{
-#'       \item{a}{A numeric value representing the maximum rate of consumption.}
-#'       \item{h}{A numeric value representing the handling time.}
-#'     }
-#' }
-#'
-#' @examples
-#' model <- model_rogersII()
-#' parameters <- list(a = 0.2, h = 0.5)
-#' model(10, parameters)  # Computes the rate of prey consumption for 10 prey
-#'
-#' @export
-model_rogersII <- function() {
-  function(prey, parameters) {
-    a <- parameters$a
-    h <- parameters$h
-    a * prey / (1 + a * h * prey)
+  if (!is.numeric(time_max) || time_max <= 0) {
+    stop("time_max must be a positive number")
   }
-}
 
-# from supplementary here: https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.13039
-
-#' Generate a Type III Model Function for Prey-Predator Simulation
-#'
-#' This function returns a model function based on the Type III functional response model,
-#' where the rate of prey consumption is described by a quadratic function of the
-#' number of prey and two parameters: `b` (the maximum rate of consumption) and
-#' `h` (the handling time).
-#'
-#' The Type III model is defined as:
-#' \deqn{ \text{rate} = \frac{b \cdot \text{prey}^2}{1 + b \cdot h \cdot \text{prey}^2} }
-#' where \code{b} is the maximum rate of consumption and \code{h} is the handling time.
-#'
-#' @return A function that calculates the propensity of prey consumption based on the current
-#' number of prey and a set of parameters. The returned function takes two arguments:
-#' \describe{
-#'   \item{prey}{Numeric representing the current number of prey.}
-#'   \item{parameters}{A list containing the parameters for the model. Must include:}
-#'     \describe{
-#'       \item{b}{A numeric value representing the maximum rate of consumption.}
-#'       \item{h}{A numeric value representing the handling time.}
-#'     }
-#' }
-#'
-#' @examples
-#' model <- model_typeIII()
-#' parameters <- list(b = 0.3, h = 0.7)
-#' model(10, parameters)  # Computes the rate of prey consumption for 10 prey
-#'
-#' @export
-model_typeIII <- function() {
-  function(prey, parameters) {
-    b <- parameters$b
-    h <- parameters$h
-    b * prey^2 / (1 + b * h * prey^2)
+  if (!is.function(model)) {
+    stop("model must be a function")
   }
-}
 
-#' Generate a Generalized Holling Model Function for Prey-Predator Simulation
-#'
-#' This function returns a model function based on the Generalized Holling model, which describes
-#' the rate of prey consumption as a function of the number of prey and three parameters:
-#' `b` (the maximum rate of consumption), `h` (the handling time), and `q` (the type of functional response).
-#'
-#' The Generalized Holling model is defined as:
-#' \deqn{ \text{rate} = \frac{b \cdot \text{prey}^{(1 + q)}}{1 + b \cdot h \cdot \text{prey}^{(1 + q)} }}
-#' where \code{b} is the maximum rate of consumption, \code{h} is the handling time, and \code{q}
-#' modifies the type of functional response.
-#'
-#' @return A function that calculates the propensity of prey consumption based on the current
-#' number of prey and a set of parameters. The returned function takes two arguments:
-#' \describe{
-#'   \item{prey}{Numeric representing the current number of prey.}
-#'   \item{parameters}{A list containing the parameters for the model. Must include:}
-#'     \describe{
-#'       \item{b}{A numeric value representing the maximum rate of consumption.}
-#'       \item{h}{A numeric value representing the handling time.}
-#'       \item{q}{A numeric value representing the type of functional response.}
-#'     }
-#' }
-#'
-#' @examples
-#' model <- model_generalised_holling()
-#' parameters <- list(b = 0.5, h = 0.2, q = 1)
-#' model(10, parameters)  # Computes the rate of prey consumption for 10 prey
-#'
-#' @export
-model_generalised_holling <- function() {
-  function(prey, parameters) {
-    b <- parameters$b
-    h <- parameters$h
-    q <- parameters$q
-    b * prey^(1 + q) / (1 + b * h * prey^(1 + q))
+  if (!is.list(parameters)) {
+    stop("`parameters` must be a list.")
   }
+
+
+  unique_prey_initial <- sort(unique(data$n_prey_initial))
+  if(length(unique_prey_initial) != nrow(data))
+    stop("Dataframe should have one row per n_prey_initial.")
+
+  for(i in seq_along(unique_prey_initial)) {
+
+    n_prey_initial <- unique_prey_initial[i]
+    tmp <- data %>%
+      dplyr::filter(.data$n_prey_initial==n_prey_initial)
+    n_replicates <- tmp$n_replicates[1]
+
+    df <- simulate(n_replicates, n_prey_initial, time_max, model, parameters)
+
+    if(i == 1)
+      df_stacked <- df
+    else
+      df_stacked <- df_stacked %>%
+      dplyr::bind_rows(df)
+  }
+
+  df_stacked
 }

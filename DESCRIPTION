@@ -17,8 +17,12 @@ Imports:
     tibble,
     tidyr
 Suggests: 
+    knitr,
+    rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Depends: 
     R (>= 2.10)
 LazyData: true
+VignetteBuilder: knitr
+URL: https://ben18785.github.io/frbayes/

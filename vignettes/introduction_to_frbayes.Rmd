@@ -1,0 +1,213 @@
+---
+title: "Introduction to frbayes"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{introduction_to_frbayes}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(frbayes)
+library(tidyverse)
+```
+
+
+In this vignette, we provide an introduction to `frbayes`, a package for fitting
+to functional response data.
+
+## Synthetic study
+We first show how we can fit a functional response model to synthetically generated
+data, where the parameters of the process are known. We assume that data generating
+process is a stochastic Rogers-II-type model, where the process is assumed to
+follow a chemical reaction equation of the form:
+
+\begin{equation}
+\text{prey} \xrightarrow{\text{rate}} \text{prey} - 1,
+\end{equation}
+
+where the rate of this reaction is given by:
+
+\begin{equation}
+\text{rate} = \frac{a \cdot \text{prey}}{1 + a \cdot h \cdot \text{prey}},
+\end{equation}
+
+where $a$ is a capture rate and $h$ is a handling time. Here, we assume in our
+synthetic data that $a=2$ and $h=0.1$.
+
+We suppose that 100 replicates were performed at initial prey counts of: 5,
+10, 20, 30, 40, and we generate a possible observed dataset for this experimental
+setup.
+```{r}
+# experiment details
+experimental_setup <- data.frame(
+  n_prey_initial = c(5, 10, 20, 30, 40),
+  n_replicates = 100
+)
+
+# generate synthetic data
+true_parameters <- list(a=2, h=0.1)
+df <- simulate_study(
+  data=experimental_setup,
+  time_max = 1,
+  model = model_rogersII(),
+  parameters = true_parameters
+)
+
+# plot data
+df %>% 
+  ggplot(aes(x=n_prey_initial, y=n_prey_eaten)) +
+  geom_jitter(height = 0.3)
+```
+
+We now fit a model to these data using maximum likelihood estimation. To do so,
+we use the `log_probability` function. We first show how the log-likelihood
+varies as $a$ is varied with $h$ fixed at its true value.
+```{r}
+as <- seq(1, 4, 0.1)
+log_likelihood <- vector(length = length(as))
+
+for(i in seq_along(as)) {
+  parameters <- list(a = as[i], h = true_parameters$h)
+  log_likelihood[i] <- log_probability(
+    parameters = parameters,
+    data = df,
+    model = model_rogersII(),
+    n_replicates = 10000)
+}
+
+# plot
+tibble(a=as, log_likelihood=log_likelihood) %>% 
+  ggplot(aes(x=a, y=log_likelihood)) +
+  geom_line() +
+  geom_vline(xintercept = true_parameters$a, linetype=2)
+```
+
+Similarly so, for $h$.
+```{r}
+hs <- seq(0.01, 0.25, 0.01)
+log_likelihood <- vector(length = length(hs))
+
+for(i in seq_along(hs)) {
+  parameters <- list(a = true_parameters$a, h=hs[i])
+  log_likelihood[i] <- log_probability(
+    parameters = parameters,
+    data = df,
+    model = model_rogersII(),
+    n_replicates = 10000)
+}
+
+# plot
+tibble(h=hs, log_likelihood=log_likelihood) %>% 
+  ggplot(aes(x=h, y=log_likelihood)) +
+  geom_line() +
+  geom_vline(xintercept = true_parameters$h, linetype=2)
+```
+
+We now perform optimisation to estimate $(a,h)$.
+```{r}
+# set a function to minimise
+f_likelihood <- function(theta) {
+  parameters[1] <- theta[1]
+  parameters[2] <- theta[2]
+  -log_probability(
+    parameters = parameters,
+    data = df,
+    model = model_rogersII(),
+    n_replicates = 10000)
+}
+
+# use R's standard optim
+fit <- optim(
+  c(1.5, 0.2),
+  f_likelihood,
+  lower=c(0, 0),
+  upper=c(5, 0.25)
+)
+
+# output pars
+a <- fit$par[1]
+h <- fit$par[2]
+print(paste0("a = ", a, ", h = ", h))
+```
+
+Look at fit of model to data.
+```{r}
+experimental_setup <- data.frame(
+  n_prey_initial = c(5, 10, 20, 30, 40),
+  n_replicates = 1000
+)
+
+# generate synthetic data at max likelihood estimates
+mle_parameters <- list(a=a, h=h)
+df_sim <- simulate_study(
+  data=experimental_setup,
+  time_max = 1,
+  model = model_rogersII(),
+  parameters = mle_parameters
+)
+
+# plot
+df %>% 
+  ggplot(aes(x=as.factor(n_prey_initial), y=n_prey_eaten)) +
+  geom_violin(data=df_sim) +
+  geom_jitter(height = 0.3) +
+  xlab("n_prey_initial")
+```
+
+## Real data
+We now show the fit of the model to real data for Bythotrephes spp., water fleas,
+which prey on items of different sizes. We first load the data and visualise it.
+```{r}
+# peak at data
+glimpse(frbayes::bythotrephes)
+
+# plot by prey size
+frbayes::bythotrephes %>% 
+  ggplot(aes(x=n_prey_initial, y=n_prey_eaten)) +
+  geom_jitter(height = 0.3) +
+  facet_wrap(~size)
+```
+
+We fit a Rogers-typeII model to each of the prey-size datasets separately.
+```{r}
+f_fit_size <- function(size_value) {
+    # set a function to minimise
+  f_likelihood <- function(theta) {
+    parameters <- list(a=1, h=1.5)
+    parameters[1] <- theta[1]
+    parameters[2] <- theta[2]
+    -log_probability(
+      parameters = parameters,
+      data = frbayes::bythotrephes %>% dplyr::filter(size == size_value),
+      model = model_rogersII(),
+      n_replicates = 10000)
+  }
+  
+  # use R's standard optim
+  fit <- optim(
+    c(1.5, 0.2),
+    f_likelihood,
+    lower=c(0, 0),
+    upper=c(5, 0.25)
+  )
+  
+  fit
+}
+
+sizes <- unique(frbayes::bythotrephes$size)
+fits <- vector(length = n_distinct(sizes),
+               mode="list")
+for(i in seq_along(fits))
+  fits[[i]] <- f_fit_size(sizes[i])
+```
+
+
+Plot the fits over the data.
