@@ -13,7 +13,7 @@ simulate_single <- function(n_prey_initial, time_max, model, parameters) {
   t <- 0
   n_prey_remaining <- n_prey_initial
   while(t < time_max & n_prey_remaining > 0) {
-    r <- runif(1)
+    r <- stats::runif(1)
     propensity <- model(n_prey_remaining, parameters)
 
     # Ensure propensity is positive to avoid division by zero or negative time increments
