@@ -13,6 +13,7 @@ RoxygenNote: 7.1.2
 Imports: 
     dplyr,
     forcats,
+    magrittr,
     purrr,
     tidyr
 Suggests: 

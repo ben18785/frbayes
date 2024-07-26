@@ -136,3 +136,118 @@ test_that("create_pmf_log handles invalid inputs", {
   expect_equal(pmf_log("a"), -Inf)
   expect_equal(pmf_log(2.5), -Inf)
 })
+
+test_that("log_probability_single_prey_initial calculates log probability correctly", {
+  # Define sample inputs
+  parameters <- list(rate = 0.1) # example parameter for the model
+  ns_prey_remaining <- c(0, 1, 2, 3, 4)
+  n_prey_initial <- 4
+  time_max <- 10
+  alpha <- 1
+
+  # Create a mock model function
+  model <- model_constant_rate()
+
+  # Calculate log probabilities
+  n_replicates <- 10000
+  result <- log_probability_single_prey_initial(
+    parameters = parameters,
+    ns_prey_remaining = ns_prey_remaining,
+    n_prey_initial = n_prey_initial,
+    model = model,
+    time_max = time_max,
+    n_replicates = n_replicates,
+    alpha = alpha
+  )
+
+  # Expected result calculation
+  simulation_result <- simulate(n_replicates, n_prey_initial, time_max, model, parameters)
+  log_prob_function <- create_pmf_log(simulation_result, n_prey_initial, alpha)
+
+  expected_log_prob <- sum(sapply(ns_prey_remaining, log_prob_function))
+
+  expect_equal(result, expected_log_prob, tolerance = 0.5) # simulation yields different pmfs due to stochasticity
+})
+
+
+# Example data for testing
+test_data <- tibble(
+  n_prey_initial = c(10, 10, 5, 5),
+  n_prey_remaining = c(8, 9, 3, 4)
+)
+
+test_that("log_probability handles invalid data formats", {
+  expect_error(log_probability(parameters = list(), data = list(), model = NULL),
+               "`data` must be a dataframe or tibble.")
+
+  expect_error(log_probability(parameters = list(), data = tibble(a = 1:5), model = NULL),
+               "`data` must contain the following columns: n_prey_initial, n_prey_remaining")
+})
+
+test_that("log_probability handles invalid time_max values", {
+  expect_error(log_probability(parameters = list(), data = test_data, model = NULL, time_max = -1),
+               "`time_max` must be a positive number.")
+
+  expect_error(log_probability(parameters = list(), data = test_data, model = NULL, time_max = "one"),
+               "`time_max` must be a positive number.")
+})
+
+test_that("log_probability handles invalid n_replicates values", {
+  expect_error(log_probability(parameters = list(), data = test_data, model = NULL, n_replicates = 0),
+               "`n_replicates` must be a positive integer.")
+
+  expect_error(log_probability(parameters = list(), data = test_data, model = NULL, n_replicates = 1.5),
+               "`n_replicates` must be a positive integer.")
+})
+
+test_that("log_probability handles invalid alpha values", {
+  expect_error(log_probability(parameters = list(), data = test_data, model = NULL, alpha = -1),
+               "`alpha` must be a positive number.")
+
+  expect_error(log_probability(parameters = list(), data = test_data, model = NULL, alpha = "one"),
+               "`alpha` must be a positive number.")
+})
+
+test_that("log_probability returns the sum of log_probabilities from log_probability_single_prey_initial", {
+  # Define parameters for the test
+  parameters <- list(rate=0.1)
+  model <- model_constant_rate()
+  time_max <- 1
+  n_replicates <- 1000
+  alpha <- 1
+
+  # Calculate expected log probability manually
+  unique_prey_initial <- sort(unique(test_data$n_prey_initial))
+
+  expected_log_prob <- 0
+  for (i in seq_along(unique_prey_initial)) {
+    df_single_prey_initial <- test_data %>%
+      dplyr::filter(n_prey_initial == unique_prey_initial[i])
+
+    ns_prey_remaining <- df_single_prey_initial$n_prey_remaining
+    n_prey_initial <- unique_prey_initial[i]
+
+    log_prob_increment <- log_probability_single_prey_initial(
+      parameters,
+      ns_prey_remaining, n_prey_initial,
+      model, time_max,
+      n_replicates, alpha
+    )
+
+    expected_log_prob <- expected_log_prob + log_prob_increment
+  }
+
+  # Get the result from the log_probability function
+  result <- log_probability(
+    parameters = parameters,
+    data = test_data,
+    model = model,
+    time_max = time_max,
+    n_replicates = n_replicates,
+    alpha = alpha
+  )
+
+  # Check if the result matches the expected log probability
+  expect_equal(result, expected_log_prob, tolerance = 1e-6)
+})
+
