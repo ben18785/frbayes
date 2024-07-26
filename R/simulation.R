@@ -1,4 +1,3 @@
-
 #' Simulate a Single Run of a Prey-Predator Model
 #'
 #' This function simulates a single run of a prey-predator model over a specified
@@ -208,7 +207,7 @@ model_typeIII <- function() {
 #' `b` (the maximum rate of consumption), `h` (the handling time), and `q` (the type of functional response).
 #'
 #' The Generalized Holling model is defined as:
-#' \deqn{ \text{rate} = \frac{b \cdot \text{prey}^{(1 + q)}}{1 + b \cdot h \cdot \text{prey}^{(1 + q)} }
+#' \deqn{ \text{rate} = \frac{b \cdot \text{prey}^{(1 + q)}}{1 + b \cdot h \cdot \text{prey}^{(1 + q)} }}
 #' where \code{b} is the maximum rate of consumption, \code{h} is the handling time, and \code{q}
 #' modifies the type of functional response.
 #'
