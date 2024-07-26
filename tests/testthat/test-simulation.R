@@ -17,7 +17,7 @@ test_that("simulate_single handles non-positive propensity by stopping simulatio
 
   n_prey_initial <- 10
   time_max <- 5
-  result <- simulate_single(n_prey_initial, time_max, model_non_positive, params)
+  expect_warning(result <- simulate_single(n_prey_initial, time_max, model_non_positive, params))
   expect_equal(result, 10)
 })
 

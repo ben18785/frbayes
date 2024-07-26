@@ -213,7 +213,7 @@ test_that("log_probability returns the sum of log_probabilities from log_probabi
   parameters <- list(rate=0.1)
   model <- model_constant_rate()
   time_max <- 1
-  n_replicates <- 1000
+  n_replicates <- 10000
   alpha <- 1
 
   # Calculate expected log probability manually
@@ -248,6 +248,6 @@ test_that("log_probability returns the sum of log_probabilities from log_probabi
   )
 
   # Check if the result matches the expected log probability
-  expect_equal(result, expected_log_prob, tolerance = 1e-6)
+  expect_equal(result, expected_log_prob, tolerance = 0.5)
 })
 

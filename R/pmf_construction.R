@@ -129,7 +129,7 @@ construct_empirical_pmf_log_df <- function(simulation_result, n_prey_initial, al
 #' log_prob_out_of_bound <- pmf_log_function(3)
 create_pmf_log <- function(simulation_result, n_prey_initial, alpha) {
 
-  df_pmf <- construct_empirical_pmf_df(simulation_result, n_prey_initial, alpha)
+  df_pmf <- construct_empirical_pmf_log_df(simulation_result, n_prey_initial, alpha)
 
   pmf_log <- function(n_prey_remaining) {
 
@@ -249,10 +249,13 @@ log_probability <- function(
       dplyr::filter(n_prey_initial==unique_prey_initial[i])
 
     log_prob_increment <- log_probability_single_prey_initial(
-      parameters,
-      ns_prey_remaining, n_prey_initial,
-      model, time_max,
-      n_replicates, alpha
+      parameters = parameters,
+      ns_prey_remaining = df_single_prey_initial$n_prey_remaining,
+      n_prey_initial = unique_prey_initial[i],
+      model = model,
+      time_max = time_max,
+      n_replicates = n_replicates,
+      alpha = alpha
     )
 
     log_prob <- log_prob + log_prob_increment
