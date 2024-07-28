@@ -18,6 +18,7 @@ knitr::opts_chunk$set(
 library(frbayes)
 library(ggplot2)
 library(purrr)
+library(dplyr)
 ```
 
 
