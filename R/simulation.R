@@ -18,7 +18,8 @@ simulate_single <- function(n_prey_initial, time_max, model, parameters) {
 
     # Ensure propensity is positive to avoid division by zero or negative time increments
     if (propensity <= 0) {
-      warning("Propensity is non-positive. Stopping simulation.")
+      warning(paste0("Propensity is non-positive. Parameters are ", parameters))
+      print(parameters)
       break
     }
 
