@@ -93,288 +93,288 @@ tibble(a=as, log_likelihood=log_likelihood) %>%
   geom_vline(xintercept = true_parameters$a, linetype=2)
 ```
 
-<!-- Similarly so, for $h$. -->
-<!-- ```{r} -->
-<!-- hs <- seq(0.01, 0.25, 0.01) -->
-<!-- log_likelihood <- vector(length = length(hs)) -->
+Similarly so, for $h$.
+```{r}
+hs <- seq(0.01, 0.25, 0.01)
+log_likelihood <- vector(length = length(hs))
 
-<!-- for(i in seq_along(hs)) { -->
-<!--   parameters <- list(a = true_parameters$a, h=hs[i]) -->
-<!--   log_likelihood[i] <- log_probability( -->
-<!--     parameters = parameters, -->
-<!--     data = df, -->
-<!--     model = model_rogersII(), -->
-<!--     n_replicates = 10000) -->
-<!-- } -->
+for(i in seq_along(hs)) {
+  parameters <- list(a = true_parameters$a, h=hs[i])
+  log_likelihood[i] <- log_probability(
+    parameters = parameters,
+    data = df,
+    model = model_rogersII(),
+    n_replicates = 10000)
+}
 
-<!-- # plot -->
-<!-- tibble(h=hs, log_likelihood=log_likelihood) %>%  -->
-<!--   ggplot(aes(x=h, y=log_likelihood)) + -->
-<!--   geom_line() + -->
-<!--   geom_vline(xintercept = true_parameters$h, linetype=2) -->
-<!-- ``` -->
+# plot
+tibble(h=hs, log_likelihood=log_likelihood) %>% 
+  ggplot(aes(x=h, y=log_likelihood)) +
+  geom_line() +
+  geom_vline(xintercept = true_parameters$h, linetype=2)
+```
 
-<!-- We can also look at the 2D likelihood surface. Here, we mark the true parameter set -->
-<!-- as a point. -->
-<!-- ```{r} -->
-<!-- parameter_combinations <- expand_grid(a=as, h=hs) -->
-<!-- parameter_combinations$z <- NA -->
-<!-- for(i in seq_along(parameter_combinations$a)) { -->
-<!--   parameters <- list(a = parameter_combinations$a[i], -->
-<!--                      h = parameter_combinations$h[i]) -->
-<!--   z <- log_probability( -->
-<!--     parameters = parameters, -->
-<!--     data = df, -->
-<!--     model = model_rogersII(), -->
-<!--     n_replicates = 1000) # smaller sample -->
-<!--   parameter_combinations$z[i] <- z -->
-<!-- } -->
+We can also look at the 2D likelihood surface. Here, we mark the true parameter set
+as a point.
+```{r}
+parameter_combinations <- expand_grid(a=as, h=hs)
+parameter_combinations$z <- NA
+for(i in seq_along(parameter_combinations$a)) {
+  parameters <- list(a = parameter_combinations$a[i],
+                     h = parameter_combinations$h[i])
+  z <- log_probability(
+    parameters = parameters,
+    data = df,
+    model = model_rogersII(),
+    n_replicates = 1000) # smaller sample
+  parameter_combinations$z[i] <- z
+}
 
-<!-- # plot -->
-<!-- ggplot(parameter_combinations, aes(x = a, y = h, fill = z)) + -->
-<!--   geom_raster() + -->
-<!--   scale_fill_viridis_c() +  # Using continuous viridis color scale -->
-<!--   theme_minimal() + -->
-<!--   geom_point(data=data.frame(h=true_parameters$h, a=true_parameters$a)) + -->
-<!--   geom_contour(aes(z = z), color = "white") -->
-<!-- ``` -->
-
-
-<!-- We now perform optimisation to estimate $(a,h)$, which we mark as a cross on the -->
-<!-- 2D likelihood surface. -->
-<!-- ```{r} -->
-<!-- # set a function to minimise -->
-<!-- f_likelihood <- function(theta) { -->
-<!--   parameters[1] <- theta[1] -->
-<!--   parameters[2] <- theta[2] -->
-<!--   -log_probability( -->
-<!--     parameters = parameters, -->
-<!--     data = df, -->
-<!--     model = model_rogersII(), -->
-<!--     n_replicates = 10000) -->
-<!-- } -->
-
-<!-- # use R's standard optim -->
-<!-- fit <- optim( -->
-<!--   c(1.5, 0.2), -->
-<!--   f_likelihood, -->
-<!--   lower=c(0, 0), -->
-<!--   upper=c(5, 0.25) -->
-<!-- ) -->
-
-<!-- # output pars -->
-<!-- a <- fit$par[1] -->
-<!-- h <- fit$par[2] -->
-<!-- print(paste0("a = ", a, ", h = ", h)) -->
-
-<!-- # overlay on 2D plot -->
-<!-- ggplot(parameter_combinations, aes(x = a, y = h, fill = z)) + -->
-<!--   geom_raster() + -->
-<!--   scale_fill_viridis_c() +  # Using continuous viridis color scale -->
-<!--   theme_minimal() + -->
-<!--   geom_point(data=data.frame(h=true_parameters$h, a=true_parameters$a)) + -->
-<!--   geom_point(data=data.frame(h=h, a=a), shape=4, size=4) + -->
-<!--   geom_contour(aes(z = z), color = "white") -->
-<!-- ``` -->
-
-<!-- Look at fit of model to data. -->
-<!-- ```{r} -->
-<!-- experimental_setup <- data.frame( -->
-<!--   n_prey_initial = c(5, 10, 20, 30, 40), -->
-<!--   n_replicates = 1000 -->
-<!-- ) -->
-
-<!-- # generate synthetic data at max likelihood estimates -->
-<!-- mle_parameters <- list(a=a, h=h) -->
-<!-- df_sim <- simulate_study( -->
-<!--   data=experimental_setup, -->
-<!--   time_max = 1, -->
-<!--   model = model_rogersII(), -->
-<!--   parameters = mle_parameters -->
-<!-- ) -->
-
-<!-- # plot -->
-<!-- df %>%  -->
-<!--   ggplot(aes(x=as.factor(n_prey_initial), y=n_prey_eaten)) + -->
-<!--   geom_violin(data=df_sim) + -->
-<!--   geom_jitter(height = 0.3) + -->
-<!--   xlab("n_prey_initial") -->
-<!-- ``` -->
-
-<!-- ## Real data -->
-<!-- We now show the fit of the model to real data for Bythotrephes spp., water fleas, -->
-<!-- which prey on items of different sizes. We first load the data and visualise it. -->
-<!-- ```{r} -->
-<!-- # peak at data -->
-<!-- glimpse(frbayes::bythotrephes) -->
-
-<!-- # plot by prey size -->
-<!-- frbayes::bythotrephes %>%  -->
-<!--   ggplot(aes(x=n_prey_initial, y=n_prey_eaten)) + -->
-<!--   geom_jitter(height = 0.3) + -->
-<!--   facet_wrap(~size) -->
-<!-- ``` -->
-
-<!-- We fit a generalised Holling model to the "large" prey-size data. This rate at which prey get -->
-<!-- eaten is given by the this expression: -->
-
-<!-- \begin{equation} -->
-<!-- \frac{b \cdot \text{prey}^{1 + q}}{1 + b \cdot h \cdot \text{prey}^{1 + q}}, -->
-<!-- \end{equation} -->
-
-<!-- where $b>0$, $0<h<1$ and $q>0$. -->
+# plot
+ggplot(parameter_combinations, aes(x = a, y = h, fill = z)) +
+  geom_raster() +
+  scale_fill_viridis_c() +  # Using continuous viridis color scale
+  theme_minimal() +
+  geom_point(data=data.frame(h=true_parameters$h, a=true_parameters$a)) +
+  geom_contour(aes(z = z), color = "white")
+```
 
 
-<!-- ```{r} -->
-<!-- f_likelihood <- function(theta) { -->
-<!--   parameters <- list(b=1, h=0.4, q=0.01) -->
-<!--   parameters[1] <- theta[1] -->
-<!--   parameters[2] <- theta[2] -->
-<!--   parameters[3] <- theta[3] -->
-<!--   -log_probability( -->
-<!--     parameters = parameters, -->
-<!--     data = frbayes::bythotrephes %>% dplyr::filter(size == "large"), -->
-<!--     model = model_generalised_holling(), -->
-<!--     n_replicates = 1000) -->
-<!-- } -->
+We now perform optimisation to estimate $(a,h)$, which we mark as a cross on the
+2D likelihood surface.
+```{r}
+# set a function to minimise
+f_likelihood <- function(theta) {
+  parameters[1] <- theta[1]
+  parameters[2] <- theta[2]
+  -log_probability(
+    parameters = parameters,
+    data = df,
+    model = model_rogersII(),
+    n_replicates = 10000)
+}
 
-<!-- # use R's standard optim -->
-<!-- fit <- optim( -->
-<!--   c(1.5, 0.2, 0.1), -->
-<!--   f_likelihood, -->
-<!--   lower=c(0, 0, 0), -->
-<!--   upper=c(5, 1, 1.5) -->
-<!-- ) -->
+# use R's standard optim
+fit <- optim(
+  c(1.5, 0.2),
+  f_likelihood,
+  lower=c(0, 0),
+  upper=c(5, 0.25)
+)
 
-<!-- # output pars -->
-<!-- b <- fit$par[1] -->
-<!-- h <- fit$par[2] -->
-<!-- q <- fit$par[3] -->
-<!-- print(paste0("b = ", b, ", h = ", h, ", q = ", q)) -->
-<!-- ``` -->
+# output pars
+a <- fit$par[1]
+h <- fit$par[2]
+print(paste0("a = ", a, ", h = ", h))
 
-<!-- Look at fit of model to data. -->
-<!-- ```{r} -->
-<!-- experimental_setup <- frbayes::bythotrephes %>% -->
-<!--   filter(size=="large") %>% -->
-<!--   group_by(n_prey_initial) %>% -->
-<!--   count() %>%  -->
-<!--   mutate(n_replicates=10000) # choose a large number here to explore full predictive distribution -->
+# overlay on 2D plot
+ggplot(parameter_combinations, aes(x = a, y = h, fill = z)) +
+  geom_raster() +
+  scale_fill_viridis_c() +  # Using continuous viridis color scale
+  theme_minimal() +
+  geom_point(data=data.frame(h=true_parameters$h, a=true_parameters$a)) +
+  geom_point(data=data.frame(h=h, a=a), shape=4, size=4) +
+  geom_contour(aes(z = z), color = "white")
+```
 
-<!-- # generate synthetic data at max likelihood estimates -->
-<!-- mle_parameters <- list(b=b, h=h, q=q) -->
-<!-- df_sim <- simulate_study( -->
-<!--   data=experimental_setup, -->
-<!--   time_max = 1, -->
-<!--   model = model_generalised_holling(), -->
-<!--   parameters = mle_parameters -->
-<!-- ) -->
+Look at fit of model to data.
+```{r}
+experimental_setup <- data.frame(
+  n_prey_initial = c(5, 10, 20, 30, 40),
+  n_replicates = 1000
+)
 
-<!-- # plot -->
-<!-- frbayes::bythotrephes %>% -->
-<!--   filter(size=="large") %>%  -->
-<!--   ggplot(aes(x=as.factor(n_prey_initial), y=n_prey_eaten)) + -->
-<!--   geom_violin(data=df_sim) + -->
-<!--   geom_jitter(height = 0.2, width = 0.1) + -->
-<!--   xlab("n_prey_initial") -->
-<!-- ``` -->
+# generate synthetic data at max likelihood estimates
+mle_parameters <- list(a=a, h=h)
+df_sim <- simulate_study(
+  data=experimental_setup,
+  time_max = 1,
+  model = model_rogersII(),
+  parameters = mle_parameters
+)
 
-<!-- We can also fit the model in a Bayesian framework, using the random walk Metropolis -->
-<!-- algorithm. To do so, we need to specify priors on the parameters, which here, we -->
-<!-- specify as $b\sim U(0, 10)$, $h\sim U(0, 1)$ and $q\sim U(0, 2)$. -->
+# plot
+df %>% 
+  ggplot(aes(x=as.factor(n_prey_initial), y=n_prey_eaten)) +
+  geom_violin(data=df_sim) +
+  geom_jitter(height = 0.3) +
+  xlab("n_prey_initial")
+```
 
-<!-- ```{r} -->
-<!-- log_posterior <- function(parameters) { -->
+## Real data
+We now show the fit of the model to real data for Bythotrephes spp., water fleas,
+which prey on items of different sizes. We first load the data and visualise it.
+```{r}
+# peak at data
+glimpse(frbayes::bythotrephes)
 
-<!--   b <- parameters$b -->
-<!--   h <- parameters$h -->
-<!--   q <- parameters$q -->
-<!--   log_prior <- ( -->
-<!--     if_else(b < 0 | b > 10, -Inf, 1/10) + -->
-<!--     if_else(h < 0 | h > 1, -Inf, 1) + -->
-<!--     if_else(q < 0 | q > 2, -Inf, 1/2) -->
-<!--   ) -->
-<!--   if(log_prior == -Inf) { -->
-<!--     return(-Inf) -->
-<!--   } -->
-<!--   log_likelihood <- log_probability( -->
-<!--     parameters = parameters, -->
-<!--     data = frbayes::bythotrephes %>% dplyr::filter(size == "large"), -->
-<!--     model = model_generalised_holling(), -->
-<!--     n_replicates = 1000) -->
-<!--   log_likelihood + log_prior -->
-<!-- } -->
+# plot by prey size
+frbayes::bythotrephes %>% 
+  ggplot(aes(x=n_prey_initial, y=n_prey_eaten)) +
+  geom_jitter(height = 0.3) +
+  facet_wrap(~size)
+```
 
-<!-- propose_parameters <- function(parameters_current, step_sizes) { -->
-<!--   b <- parameters_current$b -->
-<!--   h <- parameters_current$h -->
-<!--   q <- parameters_current$q -->
-<!--   b_p <- rnorm(1, b, step_sizes$b) -->
-<!--   h_p <- rnorm(1, h, step_sizes$h) -->
-<!--   q_p <- rnorm(1, q, step_sizes$q) -->
-<!--   list(b=b_p, h=h_p, q=q_p) -->
-<!-- } -->
+We fit a generalised Holling model to the "large" prey-size data. This rate at which prey get
+eaten is given by the this expression:
 
-<!-- step_accept_reject <- function(parameters_current, step_sizes) { -->
-<!--   parameters_proposed <- propose_parameters(parameters_current, step_sizes) -->
-<!--   log_p_current <- log_posterior(parameters_current) -->
-<!--   log_p_proposed <- log_posterior(parameters_proposed) -->
-<!--   log_r <- log(runif(1)) -->
-<!--   if(log_r < (log_p_proposed - log_p_current)) -->
-<!--     parameters_new <- parameters_proposed -->
-<!--   else -->
-<!--     parameters_new <- parameters_current -->
-<!--   parameters_new -->
-<!-- } -->
+\begin{equation}
+\frac{b \cdot \text{prey}^{1 + q}}{1 + b \cdot h \cdot \text{prey}^{1 + q}},
+\end{equation}
 
-<!-- mcmc <- function(n_iterations, parameters_initial, step_sizes) { -->
+where $b>0$, $0<h<1$ and $q>0$.
 
-<!--   df <- data.frame(iteration=rep(NA, (n_iterations + 1))) %>%  -->
-<!--     mutate( -->
-<!--       b=NA, -->
-<!--       h=NA, -->
-<!--       q=NA -->
-<!--   ) -->
-<!--   df$iteration[1] <- 0 -->
-<!--   df$b[1] <- parameters_initial$b -->
-<!--   df$h[1] <- parameters_initial$h -->
-<!--   df$q[1] <- parameters_initial$q -->
-<!--   parameters_current <- parameters_initial -->
-<!--   for(i in 1:n_iterations) { -->
-<!--     parameters_new <- step_accept_reject(parameters_current, step_sizes) -->
-<!--     df$iteration[i + 1] <- i -->
-<!--     df$b[i + 1] <- parameters_new$b -->
-<!--     df$h[i + 1] <- parameters_new$h -->
-<!--     df$q[i + 1] <- parameters_new$q -->
-<!--     parameters_current <- parameters_new -->
-<!--   } -->
-<!--   df -->
-<!-- } -->
 
-<!-- # run MCMC - takes around 4 mins -->
-<!-- max_iterations <- 800 -->
-<!-- chain <- mcmc( -->
-<!--   n_iterations=max_iterations, -->
-<!--   list(b=5, h=0.17, q=1), -->
-<!--   list(b=0.5, h=0.05, q=0.05) -->
-<!-- ) -->
+```{r}
+f_likelihood <- function(theta) {
+  parameters <- list(b=1, h=0.4, q=0.01)
+  parameters[1] <- theta[1]
+  parameters[2] <- theta[2]
+  parameters[3] <- theta[3]
+  -log_probability(
+    parameters = parameters,
+    data = frbayes::bythotrephes %>% dplyr::filter(size == "large"),
+    model = model_generalised_holling(),
+    n_replicates = 1000)
+}
+  
+# use R's standard optim
+fit <- optim(
+  c(1.5, 0.2, 0.1),
+  f_likelihood,
+  lower=c(0, 0, 0),
+  upper=c(5, 1, 1.5)
+)
 
-<!-- # print acceptance raet -->
-<!-- mean(diff(chain$b)!=0) -->
+# output pars
+b <- fit$par[1]
+h <- fit$par[2]
+q <- fit$par[3]
+print(paste0("b = ", b, ", h = ", h, ", q = ", q))
+```
 
-<!-- # plot results -->
-<!-- chain %>%  -->
-<!--   pivot_longer(c(b, h, q)) %>%  -->
-<!--   filter(iteration > max_iterations / 2) %>% # remove warm-up iterations -->
-<!--   ggplot(aes(x=iteration, y=value)) + -->
-<!--   geom_line() + -->
-<!--   facet_wrap(~name, scales = "free") -->
+Look at fit of model to data.
+```{r}
+experimental_setup <- frbayes::bythotrephes %>%
+  filter(size=="large") %>%
+  group_by(n_prey_initial) %>%
+  count() %>% 
+  mutate(n_replicates=10000) # choose a large number here to explore full predictive distribution
 
-<!-- # look at correlations -->
-<!-- chain %>%  -->
-<!--   ggplot(aes(x=b, y=q)) + -->
-<!--   geom_point() -->
-<!-- ``` -->
+# generate synthetic data at max likelihood estimates
+mle_parameters <- list(b=b, h=h, q=q)
+df_sim <- simulate_study(
+  data=experimental_setup,
+  time_max = 1,
+  model = model_generalised_holling(),
+  parameters = mle_parameters
+)
+
+# plot
+frbayes::bythotrephes %>%
+  filter(size=="large") %>% 
+  ggplot(aes(x=as.factor(n_prey_initial), y=n_prey_eaten)) +
+  geom_violin(data=df_sim) +
+  geom_jitter(height = 0.2, width = 0.1) +
+  xlab("n_prey_initial")
+```
+
+We can also fit the model in a Bayesian framework, using the random walk Metropolis
+algorithm. To do so, we need to specify priors on the parameters, which here, we
+specify as $b\sim U(0, 10)$, $h\sim U(0, 1)$ and $q\sim U(0, 2)$.
+
+```{r}
+log_posterior <- function(parameters) {
+  
+  b <- parameters$b
+  h <- parameters$h
+  q <- parameters$q
+  log_prior <- (
+    if_else(b < 0 | b > 10, -Inf, 1/10) +
+    if_else(h < 0 | h > 1, -Inf, 1) +
+    if_else(q < 0 | q > 2, -Inf, 1/2)
+  )
+  if(log_prior == -Inf) {
+    return(-Inf)
+  }
+  log_likelihood <- log_probability(
+    parameters = parameters,
+    data = frbayes::bythotrephes %>% dplyr::filter(size == "large"),
+    model = model_generalised_holling(),
+    n_replicates = 1000)
+  log_likelihood + log_prior
+}
+
+propose_parameters <- function(parameters_current, step_sizes) {
+  b <- parameters_current$b
+  h <- parameters_current$h
+  q <- parameters_current$q
+  b_p <- rnorm(1, b, step_sizes$b)
+  h_p <- rnorm(1, h, step_sizes$h)
+  q_p <- rnorm(1, q, step_sizes$q)
+  list(b=b_p, h=h_p, q=q_p)
+}
+
+step_accept_reject <- function(parameters_current, step_sizes) {
+  parameters_proposed <- propose_parameters(parameters_current, step_sizes)
+  log_p_current <- log_posterior(parameters_current)
+  log_p_proposed <- log_posterior(parameters_proposed)
+  log_r <- log(runif(1))
+  if(log_r < (log_p_proposed - log_p_current))
+    parameters_new <- parameters_proposed
+  else
+    parameters_new <- parameters_current
+  parameters_new
+}
+
+mcmc <- function(n_iterations, parameters_initial, step_sizes) {
+  
+  df <- data.frame(iteration=rep(NA, (n_iterations + 1))) %>% 
+    mutate(
+      b=NA,
+      h=NA,
+      q=NA
+  )
+  df$iteration[1] <- 0
+  df$b[1] <- parameters_initial$b
+  df$h[1] <- parameters_initial$h
+  df$q[1] <- parameters_initial$q
+  parameters_current <- parameters_initial
+  for(i in 1:n_iterations) {
+    parameters_new <- step_accept_reject(parameters_current, step_sizes)
+    df$iteration[i + 1] <- i
+    df$b[i + 1] <- parameters_new$b
+    df$h[i + 1] <- parameters_new$h
+    df$q[i + 1] <- parameters_new$q
+    parameters_current <- parameters_new
+  }
+  df
+}
+
+# run MCMC - takes around 4 mins
+max_iterations <- 800
+chain <- mcmc(
+  n_iterations=max_iterations,
+  list(b=5, h=0.17, q=1),
+  list(b=0.5, h=0.05, q=0.05)
+)
+
+# print acceptance raet
+mean(diff(chain$b)!=0)
+
+# plot results
+chain %>% 
+  pivot_longer(c(b, h, q)) %>% 
+  filter(iteration > max_iterations / 2) %>% # remove warm-up iterations
+  ggplot(aes(x=iteration, y=value)) +
+  geom_line() +
+  facet_wrap(~name, scales = "free")
+
+# look at correlations
+chain %>% 
+  ggplot(aes(x=b, y=q)) +
+  geom_point()
+```
 
 
 
