@@ -95,6 +95,86 @@ simulate <- function(n_replicates, n_prey_initial, time_max, model, parameters) 
   result
 }
 
+#' Simulate Multiple Runs of a Prey-Predator Model
+#'
+#' This function simulates multiple runs of a prey-predator model, each with the same
+#' initial conditions and parameters, and returns a summary of the results.
+#'
+#' @param n_replicates An integer representing the number of replicate simulations to perform.
+#' @inheritParams simulate_single
+#'
+#' @return A tibble with columns \code{n_prey_initial}, \code{n_prey_eaten}, and \code{n_prey_remaining},
+#'         summarizing the results of the simulations. Each row represents a single simulation replicate.
+#'
+#' @examples
+#' # Define a simple linear model for the propensity
+#' model <- function(n_prey, params) {
+#'   rate <- params$rate
+#'   return(rate * n_prey)
+#' }
+#'
+#' # Set the number of replicates, initial number of prey, maximum time, and model parameters
+#' n_replicates <- 10
+#' n_prey_initial <- 100
+#' time_max <- 10
+#' parameters <- list(rate = 0.1)
+#'
+#' # Run the simulations
+#' simulate_efficient(n_replicates, n_prey_initial, time_max, model, parameters)
+#'
+#' @export
+simulate_efficient <- function(n_replicates, n_prey_initial, time_max, model, parameters) {
+
+  if (!is.function(model)) {
+    stop("model must be a function")
+  }
+
+  if (!is.numeric(n_replicates) || n_replicates <= 0 || round(n_replicates) != n_replicates) {
+    stop("n_replicates must be a positive integer")
+  }
+
+  if (!is.numeric(n_prey_initial) || n_prey_initial <= 0 || round(n_prey_initial) != n_prey_initial) {
+    stop("n_prey_initial must be a positive integer")
+  }
+
+  if (!is.numeric(time_max) || time_max <= 0) {
+    stop("time_max must be a positive number")
+  }
+
+  # precalculate all possible propensities
+  possible_prey_remaining <- n_prey_initial:1
+  propensities <- model(possible_prey_remaining, parameters)
+  propensities <- rep(propensities, n_replicates)
+
+  # precalculate r ~ unif(0, 1)
+  r <- runif(n_replicates * n_prey_initial)
+
+  # calculate taus
+  tau <- -log(r) / propensities
+
+  # Reshape tau for easier handling
+  tau_matrix <- matrix(tau, nrow = n_prey_initial, ncol = n_replicates, byrow = FALSE)
+
+  # Calculate cumulative sums once for all replicates
+  cumsum_matrix <- apply(tau_matrix, 2, cumsum)
+
+  # Find the number of prey remaining
+  prey_remaining <- apply(cumsum_matrix, 2, function(times) {
+    idx <- which(times > 1)[1]
+    if (is.na(idx)) 0 else possible_prey_remaining[idx]
+  })
+
+  prey_eaten <- n_prey_initial - prey_remaining
+  result <- dplyr::tibble(
+    replicate_id = seq_len(n_replicates),
+    n_prey_initial = n_prey_initial,
+    n_prey_eaten = prey_eaten,
+    n_prey_remaining = prey_remaining
+  )
+
+  result
+}
+
 #' Simulate a Study with Multiple Prey Initial Conditions
 #'
 #' This function performs simulations for a study based on varying initial prey counts.
