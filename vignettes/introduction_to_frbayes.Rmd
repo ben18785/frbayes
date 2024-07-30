@@ -83,7 +83,7 @@ for(i in seq_along(as)) {
     parameters = parameters,
     data = df,
     model = model_rogersII(),
-    n_replicates = 10000)
+    n_replicates = 1000)
 }
 
 # plot
@@ -104,7 +104,7 @@ for(i in seq_along(hs)) {
     parameters = parameters,
     data = df,
     model = model_rogersII(),
-    n_replicates = 10000)
+    n_replicates = 1000)
 }
 
 # plot
@@ -140,25 +140,25 @@ ggplot(parameter_combinations, aes(x = a, y = h, fill = z)) +
 ```
 
 
-We now perform optimisation to estimate $(a,h)$, which we mark as a cross on the
-2D likelihood surface.
+We now perform optimisation to estimate $(a,h)$, which we mark as a cross on the 2D likelihood surface.
 ```{r}
 # set a function to minimise
 f_likelihood <- function(theta) {
+  parameters <- list(a=1.5, h=0.1) #  these are dummy values
   parameters[1] <- theta[1]
   parameters[2] <- theta[2]
   -log_probability(
     parameters = parameters,
     data = df,
     model = model_rogersII(),
-    n_replicates = 10000)
+    n_replicates = 1000)
 }
 
 # use R's standard optim
 fit <- optim(
   c(1.5, 0.2),
   f_likelihood,
-  lower=c(0, 0),
+  lower=c(0.01, 0.01),
   upper=c(5, 0.25)
 )
 

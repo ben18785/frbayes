@@ -128,7 +128,7 @@ test_that("simulate_study throws errors for invalid inputs", {
 
   # Create a sample valid data frame
   valid_data <- tibble::tibble(
-    prey_initial = c(10, 20),
+    n_prey_initial = c(10, 20),
     n_replicates = c(5, 10)
   )
 
@@ -136,8 +136,8 @@ test_that("simulate_study throws errors for invalid inputs", {
   parameters <- list(rate=0.1)
 
   # Test invalid `data` input
-  expect_error(simulate_study(NULL, 1, mock_model, list()), "`data` must be a dataframe containing columns 'prey_initial' and 'n_replicates'.")
-  expect_error(simulate_study(tibble::tibble(a = 1, b = 2), 1, mock_model, list()), "`data` must be a dataframe containing columns 'prey_initial' and 'n_replicates'.")
+  expect_error(simulate_study(NULL, 1, mock_model, list()), "`data` must be a dataframe containing columns 'n_prey_initial' and 'n_replicates'.")
+  expect_error(simulate_study(tibble::tibble(a = 1, b = 2), 1, mock_model, list()), "`data` must be a dataframe containing columns 'n_prey_initial' and 'n_replicates'.")
 
   # Test invalid `model` input
   expect_error(simulate_study(valid_data, 1, NULL, list()), "model must be a function")
@@ -151,8 +151,8 @@ test_that("simulate_study throws errors for invalid inputs", {
 
   # Test invalid dataframe structure
   invalid_data <- tibble::tibble(
-    prey_initial = c(10, 20, 20),
+    n_prey_initial = c(10, 20, 20),
     n_replicates = c(5, 10, 10)
   )
-  expect_error(simulate_study(invalid_data, 1, mock_model, list()), "Dataframe should have one row per prey_initial.")
+  expect_error(simulate_study(invalid_data, 1, mock_model, list()), "Dataframe should have one row per n_prey_initial.")
 })
