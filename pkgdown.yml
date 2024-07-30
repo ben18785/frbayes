@@ -1,0 +1,9 @@
+pandoc: 3.1.11
+pkgdown: 2.1.0
+pkgdown_sha: ~
+articles:
+  introduction_to_frbayes: introduction_to_frbayes.html
+last_built: 2024-07-30T12:23Z
+urls:
+  reference: https://ben18785.github.io/frbayes/reference
+  article: https://ben18785.github.io/frbayes/articles
