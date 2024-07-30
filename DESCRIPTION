@@ -1,10 +1,11 @@
 Package: frbayes
-Title: What the Package Does (One Line, Title Case)
+Title: Estimating Functional Response Models Using Stochastic Models Of Population Dynamics
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+    c(
+    person("Ben", "Lambert", , "ben.c.lambert@gmail.com", role = c("aut", "cre")),
+    person("Cait", "Newport", , "caitlin.newport@biology.ox.ac.uk", role = c("aut")))
+Description: This package facilitates fitting of stochastic models of population dynamics where a predator consumes prey and where the functional response of predators to changes in prey densities is sought.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
