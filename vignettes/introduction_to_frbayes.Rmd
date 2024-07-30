@@ -93,51 +93,51 @@ tibble(a=as, log_likelihood=log_likelihood) %>%
   geom_vline(xintercept = true_parameters$a, linetype=2)
 ```
 
-<!-- Similarly so, for $h$. -->
-<!-- ```{r} -->
-<!-- hs <- seq(0.01, 0.25, 0.01) -->
-<!-- log_likelihood <- vector(length = length(hs)) -->
+Similarly so, for $h$.
+```{r}
+hs <- seq(0.01, 0.25, 0.01)
+log_likelihood <- vector(length = length(hs))
 
-<!-- for(i in seq_along(hs)) { -->
-<!--   parameters <- list(a = true_parameters$a, h=hs[i]) -->
-<!--   log_likelihood[i] <- log_probability( -->
-<!--     parameters = parameters, -->
-<!--     data = df, -->
-<!--     model = model_rogersII(), -->
-<!--     n_replicates = 10000) -->
-<!-- } -->
+for(i in seq_along(hs)) {
+  parameters <- list(a = true_parameters$a, h=hs[i])
+  log_likelihood[i] <- log_probability(
+    parameters = parameters,
+    data = df,
+    model = model_rogersII(),
+    n_replicates = 10000)
+}
 
-<!-- # plot -->
-<!-- tibble(h=hs, log_likelihood=log_likelihood) %>%  -->
-<!--   ggplot(aes(x=h, y=log_likelihood)) + -->
-<!--   geom_line() + -->
-<!--   geom_vline(xintercept = true_parameters$h, linetype=2) -->
-<!-- ``` -->
+# plot
+tibble(h=hs, log_likelihood=log_likelihood) %>% 
+  ggplot(aes(x=h, y=log_likelihood)) +
+  geom_line() +
+  geom_vline(xintercept = true_parameters$h, linetype=2)
+```
 
-<!-- We can also look at the 2D likelihood surface. Here, we mark the true parameter set -->
-<!-- as a point. -->
-<!-- ```{r} -->
-<!-- parameter_combinations <- expand_grid(a=as, h=hs) -->
-<!-- parameter_combinations$z <- NA -->
-<!-- for(i in seq_along(parameter_combinations$a)) { -->
-<!--   parameters <- list(a = parameter_combinations$a[i], -->
-<!--                      h = parameter_combinations$h[i]) -->
-<!--   z <- log_probability( -->
-<!--     parameters = parameters, -->
-<!--     data = df, -->
-<!--     model = model_rogersII(), -->
-<!--     n_replicates = 1000) # smaller sample -->
-<!--   parameter_combinations$z[i] <- z -->
-<!-- } -->
+We can also look at the 2D likelihood surface. Here, we mark the true parameter set
+as a point.
+```{r}
+parameter_combinations <- expand_grid(a=as, h=hs)
+parameter_combinations$z <- NA
+for(i in seq_along(parameter_combinations$a)) {
+  parameters <- list(a = parameter_combinations$a[i],
+                     h = parameter_combinations$h[i])
+  z <- log_probability(
+    parameters = parameters,
+    data = df,
+    model = model_rogersII(),
+    n_replicates = 1000) # smaller sample
+  parameter_combinations$z[i] <- z
+}
 
-<!-- # plot -->
-<!-- ggplot(parameter_combinations, aes(x = a, y = h, fill = z)) + -->
-<!--   geom_raster() + -->
-<!--   scale_fill_viridis_c() +  # Using continuous viridis color scale -->
-<!--   theme_minimal() + -->
-<!--   geom_point(data=data.frame(h=true_parameters$h, a=true_parameters$a)) + -->
-<!--   geom_contour(aes(z = z), color = "white") -->
-<!-- ``` -->
+# plot
+ggplot(parameter_combinations, aes(x = a, y = h, fill = z)) +
+  geom_raster() +
+  scale_fill_viridis_c() +  # Using continuous viridis color scale
+  theme_minimal() +
+  geom_point(data=data.frame(h=true_parameters$h, a=true_parameters$a)) +
+  geom_contour(aes(z = z), color = "white")
+```
 
 
 <!-- We now perform optimisation to estimate $(a,h)$, which we mark as a cross on the -->
