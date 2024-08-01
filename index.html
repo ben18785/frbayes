@@ -35,7 +35,8 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/introduction_to_frbayes.html">Introduction to frbayes</a></li>
+<li><a class="dropdown-item" href="articles/bayesian_fitting.html">Bayesian fitting to real data</a></li>
+    <li><a class="dropdown-item" href="articles/introduction_to_frbayes.html">Introduction to frbayes</a></li>
   </ul>
 </li>
       </ul>
@@ -69,7 +70,13 @@
 <h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
 </h2>
 <p>We first show how we can examine the fit of a functional response model to synthetically generated data, where the parameters of the process are known. We assume that data generating process is a stochastic Rogers-II-type model, where the process is assumed to follow a chemical reaction equation of the form:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">prey</mtext><mover><mo>→</mo><mtext mathvariant="normal">rate</mtext></mover><mtext mathvariant="normal">prey</mtext><mo>−</mo><mn>1</mn><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\text{prey} \xrightarrow{\text{rate}} \text{prey} - 1,
+</annotation></semantics></math></p>
 <p>where the rate of this reaction is given by:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">rate</mtext><mo>=</mo><mfrac><mrow><mi>a</mi><mo>⋅</mo><mtext mathvariant="normal">prey</mtext></mrow><mrow><mn>1</mn><mo>+</mo><mi>a</mi><mo>⋅</mo><mi>h</mi><mo>⋅</mo><mtext mathvariant="normal">prey</mtext></mrow></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\text{rate} = \frac{a \cdot \text{prey}}{1 + a \cdot h \cdot \text{prey}},
+</annotation></semantics></math></p>
 <p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math> is a capture rate and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math> is a handling time. Here, we assume in our synthetic data that <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">a=2</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>=</mo><mn>0.1</mn></mrow><annotation encoding="application/x-tex">h=0.1</annotation></semantics></math>.</p>
 <p>We suppose that 100 replicates were performed at initial prey counts of: 5, 10, 20, 30, 40, and we generate a possible observed dataset for this experimental setup.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
