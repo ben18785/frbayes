@@ -19,11 +19,12 @@
 <url><loc>https://ben18785.github.io/frbayes/reference/index.html</loc></url>
 <url><loc>https://ben18785.github.io/frbayes/reference/log_probability.html</loc></url>
 <url><loc>https://ben18785.github.io/frbayes/reference/log_probability_single_prey_initial.html</loc></url>
-<url><loc>https://ben18785.github.io/frbayes/reference/model_constant_rate.html</loc></url>
 <url><loc>https://ben18785.github.io/frbayes/reference/model_generalised_holling.html</loc></url>
 <url><loc>https://ben18785.github.io/frbayes/reference/model_rogersII.html</loc></url>
+<url><loc>https://ben18785.github.io/frbayes/reference/model_stochastic_degradation.html</loc></url>
 <url><loc>https://ben18785.github.io/frbayes/reference/model_typeIII.html</loc></url>
 <url><loc>https://ben18785.github.io/frbayes/reference/simulate.html</loc></url>
+<url><loc>https://ben18785.github.io/frbayes/reference/simulate_many_trajectories.html</loc></url>
 <url><loc>https://ben18785.github.io/frbayes/reference/simulate_study.html</loc></url>
 <url><loc>https://ben18785.github.io/frbayes/reference/simulate_trajectory.html</loc></url>
 </urlset>

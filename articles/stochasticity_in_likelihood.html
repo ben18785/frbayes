@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Stochastic in the likelihood • frbayes</title>
+<title>Stochasticity in the likelihood • frbayes</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Stochastic in the likelihood">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Stochasticity in the likelihood">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -35,7 +35,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/bayesian_fitting.html">Bayesian fitting to real data</a></li>
     <li><a class="dropdown-item" href="../articles/introduction_to_frbayes.html">Introduction to frbayes</a></li>
-    <li><a class="dropdown-item" href="../articles/stochasticity_in_likelihood.html">Stochastic in the likelihood</a></li>
+    <li><a class="dropdown-item" href="../articles/stochasticity_in_likelihood.html">Stochasticity in the likelihood</a></li>
   </ul>
 </li>
       </ul>
@@ -56,7 +56,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Stochastic in the likelihood</h1>
+      <h1>Stochasticity in the likelihood</h1>
             
       
 
@@ -94,7 +94,7 @@ initially colocated with the predators. Over time, the predators eat the
 prey and they diminish. Often, the numbers of prey in such experiments
 are relatively few, meaning that stochasticity is important, and this
 package explicitly models this using <a href="https://arxiv.org/abs/0704.1908" class="external-link"><em>chemical reaction
-equations</em></a>.</p>
+equations</em></a> (CREs).</p>
 <p>The type of CRE this package assumes is of the form:</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">prey</mtext><mover><mo>→</mo><mtext mathvariant="normal">rate</mtext></mover><mtext mathvariant="normal">prey</mtext><mo>−</mo><mn>1</mn><mo>,</mo></mrow><annotation encoding="application/x-tex">
 \text{prey} \xrightarrow{\text{rate}} \text{prey} - 1,
@@ -110,7 +110,7 @@ is (potentially a vector of) parameter values.</p>
 <p>This type of model is inherently <em>stochastic</em> meaning that
 even when the parameter values are fixed, it is likely that each time
 the model is run, the results will differ.</p>
-<p>The simplest possible model for
+<p>A simple model for
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi><mrow><mo stretchy="true" form="prefix">(</mo><mtext mathvariant="normal">prey</mtext><mo>;</mo><mi>θ</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">F(\text{prey};\theta)</annotation></semantics></math>
 is:</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi><mrow><mo stretchy="true" form="prefix">(</mo><mtext mathvariant="normal">prey</mtext><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mtext mathvariant="normal">rate</mtext><mo>×</mo><mtext mathvariant="normal">prey</mtext></mrow><annotation encoding="application/x-tex">
@@ -121,26 +121,27 @@ F(\text{prey}) = \text{rate} \times \text{prey}
 dictates the speed at which prey are eaten. This type of model is known
 as a <a href="https://arxiv.org/abs/0704.1908" class="external-link"><em>stochastic
 degradation model</em></a>.</p>
-<p>To illustrate how this model works, we can simulate from it. We
+<p>To illustrate how this model works, we can simulate from it in
+<code>frbayes</code> which, under the hood, uses the <a href="https://arxiv.org/abs/0704.1908" class="external-link">Gillespie algorithm</a>. We
 assume an arbitrary parameter value:
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">rate</mtext><mo>=</mo><mn>0.1</mn></mrow><annotation encoding="application/x-tex">\text{rate}=0.1</annotation></semantics></math>
 and perform a simulation where we suppose there are initially 10
 prey.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># stochastic degradation parameters</span></span>
-<span><span class="va">true_parameters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>rate<span class="op">=</span><span class="fl">0.2</span><span class="op">)</span></span>
+<span><span class="va">true_parameters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>rate <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># stochastic simulation</span></span>
 <span><span class="va">df_single_replicate</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulate_trajectory.html">simulate_trajectory</a></span><span class="op">(</span></span>
 <span>  n_prey_initial <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  time_max <span class="op">=</span> <span class="fl">20</span>, <span class="co"># time at which to stop recording if still some prey remaining</span></span>
-<span>  model <span class="op">=</span> <span class="fu"><a href="../reference/model_constant_rate.html">model_constant_rate</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  model <span class="op">=</span> <span class="fu"><a href="../reference/model_stochastic_degradation.html">model_stochastic_degradation</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  parameters <span class="op">=</span> <span class="va">true_parameters</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># plot</span></span>
-<span><span class="va">df_single_replicate</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">time</span>, y<span class="op">=</span><span class="va">n_prey_eaten</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span><span class="va">df_single_replicate</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">time</span>, y <span class="op">=</span> <span class="va">n_prey_eaten</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_step</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span>n.breaks <span class="op">=</span> <span class="fl">10</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_continuous</a></span><span class="op">(</span>limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">20</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
@@ -148,49 +149,23 @@ prey.</p>
 <p>Because this model is stochastic, each time it is run, a different
 trajectory can occur. We now simulate 100 such trajectories.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># convenience function</span></span>
-<span><span class="va">simulate_many_trajectories</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span></span>
-<span>    <span class="va">n_trajectories</span>,</span>
-<span>    <span class="va">n_prey_initial</span>,</span>
-<span>    <span class="va">time_max</span>,</span>
-<span>    <span class="va">model</span>,</span>
-<span>    <span class="va">parameters</span><span class="op">)</span><span class="op">{</span></span>
-<span></span>
-<span>  <span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="va">n_trajectories</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    </span>
-<span>    <span class="va">df_single_replicate</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulate_trajectory.html">simulate_trajectory</a></span><span class="op">(</span></span>
-<span>      n_prey_initial <span class="op">=</span> <span class="va">n_prey_initial</span>,</span>
-<span>      time_max <span class="op">=</span> <span class="va">time_max</span>,</span>
-<span>      model <span class="op">=</span> <span class="va">model</span>,</span>
-<span>      parameters <span class="op">=</span> <span class="va">true_parameters</span></span>
-<span>    <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>      <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>trajectory_id<span class="op">=</span><span class="va">i</span><span class="op">)</span></span>
-<span>    </span>
-<span>    <span class="kw">if</span><span class="op">(</span><span class="va">i</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span></span>
-<span>      <span class="va">df_all_trajectories</span> <span class="op">&lt;-</span> <span class="va">df_single_replicate</span></span>
-<span>    <span class="kw">else</span></span>
-<span>      <span class="va">df_all_trajectories</span> <span class="op">&lt;-</span> <span class="va">df_all_trajectories</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>        <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span><span class="va">df_single_replicate</span><span class="op">)</span></span>
-<span>  <span class="op">}</span></span>
-<span></span>
-<span>  <span class="va">df_all_trajectories</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="co"># perform simulations</span></span>
-<span><span class="va">df_all_trajectories</span> <span class="op">&lt;-</span> <span class="fu">simulate_many_trajectories</span><span class="op">(</span></span>
-<span>  n_trajectories<span class="op">=</span><span class="fl">100</span>,</span>
-<span>  n_prey_initial<span class="op">=</span><span class="fl">10</span>,</span>
-<span>  time_max<span class="op">=</span><span class="fl">10</span>,</span>
-<span>  model<span class="op">=</span><span class="fu"><a href="../reference/model_constant_rate.html">model_constant_rate</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  parameters<span class="op">=</span><span class="va">true_parameters</span></span>
+<code class="sourceCode R"><span><span class="co"># perform simulations</span></span>
+<span><span class="va">df_all_trajectories</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulate_many_trajectories.html">simulate_many_trajectories</a></span><span class="op">(</span></span>
+<span>  n_trajectories <span class="op">=</span> <span class="fl">100</span>,</span>
+<span>  n_prey_initial <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  time_max <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  model <span class="op">=</span> <span class="fu"><a href="../reference/model_stochastic_degradation.html">model_stochastic_degradation</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  parameters <span class="op">=</span> <span class="va">true_parameters</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># plot</span></span>
-<span><span class="va">df_all_trajectories</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">time</span>,</span>
-<span>             y<span class="op">=</span><span class="va">n_prey_eaten</span>,</span>
-<span>             group<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">trajectory_id</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_step</a></span><span class="op">(</span>alpha<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span><span class="va">df_all_trajectories</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
+<span>    x <span class="op">=</span> <span class="va">time</span>,</span>
+<span>    y <span class="op">=</span> <span class="va">n_prey_eaten</span>,</span>
+<span>    group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">trajectory_id</span><span class="op">)</span></span>
+<span>  <span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_step</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span>n.breaks <span class="op">=</span> <span class="fl">10</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_continuous</a></span><span class="op">(</span>limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">15</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Warning: Removed 19 rows containing missing values or values outside the scale range</span></span>
@@ -203,13 +178,13 @@ trajectory can occur. We now simulate 100 such trajectories.</p>
 distribution which describes the data at a point in time. A stochastic
 degradation model is a rare exception to this. In this case, <a href="https://arxiv.org/abs/0704.1908" class="external-link">it is possible to derive such a
 formula</a>, which describes the number of prey remaining at a given
-observation time.</p>
+observation time:</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>exp</mo><mrow><mo stretchy="true" form="prefix">(</mo><mo>−</mo><mtext mathvariant="normal">rate</mtext><mo>⋅</mo><mtext mathvariant="normal">prey</mtext><mo>⋅</mo><mtext mathvariant="normal">time</mtext><mo stretchy="true" form="postfix">)</mo></mrow><mo>⋅</mo><mrow><mo stretchy="true" form="prefix">(</mo><mfrac linethickness="0"><mi>n</mi><mtext mathvariant="normal">prey</mtext></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>⋅</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mo>exp</mo><mrow><mo stretchy="true" form="prefix">(</mo><mo>−</mo><mtext mathvariant="normal">rate</mtext><mo>⋅</mo><mtext mathvariant="normal">time</mtext><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mi>n</mi><mo>−</mo><mtext mathvariant="normal">prey</mtext></mrow></msup></mrow><annotation encoding="application/x-tex">
 \exp(-\text{rate} \cdot \text{prey} \cdot \text{time}) \cdot 
       \binom{n}{\text{prey}} \cdot
       \left(1 - \exp(-\text{rate} \cdot \text{time})\right)^{n - \text{prey}}
 </annotation></semantics></math> By simply substituting
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">prey</mtext><mo>=</mo><mi>n</mi><mo>−</mo><mtext mathvariant="normal">n_e</mtext></mrow><annotation encoding="application/x-tex">\text{prey} = n - \text{n_e}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">prey</mtext><mo>=</mo><mi>n</mi><mo>−</mo><msub><mi>n</mi><mi>e</mi></msub></mrow><annotation encoding="application/x-tex">\text{prey} = n - n_e</annotation></semantics></math>,
 where
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>n</mi><mi>e</mi></msub><annotation encoding="application/x-tex">n_e</annotation></semantics></math>
 is the number of prey eaten, we obtain a distribution over the number of
@@ -227,9 +202,9 @@ and the number of initial prey,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>10</mn></mrow><annotation encoding="application/x-tex">n=10</annotation></semantics></math>.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">analytical_pmf</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n_prey_eaten</span>, <span class="va">n_prey_initial</span>, <span class="va">t</span>, <span class="va">rate</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">rate</span> <span class="op">*</span> <span class="op">(</span><span class="va">n_prey_initial</span> <span class="op">-</span> <span class="va">n_prey_eaten</span><span class="op">)</span> <span class="op">*</span> <span class="va">t</span><span class="op">)</span> <span class="op">*</span> <span class="op">(</span></span>
-<span>      <span class="fu"><a href="https://rdrr.io/r/base/Special.html" class="external-link">choose</a></span><span class="op">(</span><span class="va">n_prey_initial</span>, <span class="va">n_prey_initial</span> <span class="op">-</span> <span class="va">n_prey_eaten</span><span class="op">)</span> <span class="op">*</span></span>
-<span>        <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">rate</span> <span class="op">*</span> <span class="va">t</span><span class="op">)</span><span class="op">)</span><span class="op">^</span><span class="va">n_prey_eaten</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">rate</span> <span class="op">*</span> <span class="op">(</span><span class="va">n_prey_initial</span> <span class="op">-</span> <span class="va">n_prey_eaten</span><span class="op">)</span> <span class="op">*</span> <span class="va">t</span><span class="op">)</span> <span class="op">*</span> <span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/Special.html" class="external-link">choose</a></span><span class="op">(</span><span class="va">n_prey_initial</span>, <span class="va">n_prey_initial</span> <span class="op">-</span> <span class="va">n_prey_eaten</span><span class="op">)</span> <span class="op">*</span></span>
+<span>      <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">rate</span> <span class="op">*</span> <span class="va">t</span><span class="op">)</span><span class="op">)</span><span class="op">^</span><span class="va">n_prey_eaten</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
 <span><span class="co"># generate pmf values</span></span>
@@ -238,51 +213,56 @@ and the number of initial prey,
 <span><span class="va">obs_time</span> <span class="op">&lt;-</span> <span class="fl">5</span></span>
 <span><span class="va">pmf_values</span> <span class="op">&lt;-</span> <span class="fu">analytical_pmf</span><span class="op">(</span></span>
 <span>  <span class="va">n_prey_eaten</span>, <span class="va">n_prey_initial</span>,</span>
-<span>  <span class="va">obs_time</span>, rate<span class="op">=</span><span class="va">true_parameters</span><span class="op">$</span><span class="va">rate</span><span class="op">)</span></span>
+<span>  <span class="va">obs_time</span>,</span>
+<span>  rate <span class="op">=</span> <span class="va">true_parameters</span><span class="op">$</span><span class="va">rate</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># plot</span></span>
 <span><span class="va">analytical_pmf_df</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
 <span>  <span class="va">n_prey_eaten</span>,</span>
-<span>  pmf<span class="op">=</span><span class="va">pmf_values</span></span>
-<span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>type<span class="op">=</span><span class="st">"analytical"</span><span class="op">)</span></span>
+<span>  pmf <span class="op">=</span> <span class="va">pmf_values</span></span>
+<span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"analytical"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">analytical_pmf_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">n_prey_eaten</span>, y<span class="op">=</span><span class="va">pmf</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span><span class="va">analytical_pmf_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">n_prey_eaten</span>, y <span class="op">=</span> <span class="va">pmf</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_col</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_continuous</a></span><span class="op">(</span>n.breaks <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
-<p><img src="stochasticity_in_likelihood_files/figure-html/unnamed-chunk-4-1.png" width="700">
-We can compare this distribution with model simulations by a slice
+<p><img src="stochasticity_in_likelihood_files/figure-html/unnamed-chunk-4-1.png" width="700"></p>
+<p>We can compare this distribution with model simulations by a slice
 through these at
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">time</mtext><mo>=</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">\text{time}=5</annotation></semantics></math>.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># plot</span></span>
-<span><span class="va">df_all_trajectories</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">time</span>,</span>
-<span>             y<span class="op">=</span><span class="va">n_prey_eaten</span>,</span>
-<span>             group<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">trajectory_id</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_step</a></span><span class="op">(</span>alpha<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span><span class="va">df_all_trajectories</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
+<span>    x <span class="op">=</span> <span class="va">time</span>,</span>
+<span>    y <span class="op">=</span> <span class="va">n_prey_eaten</span>,</span>
+<span>    group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">trajectory_id</span><span class="op">)</span></span>
+<span>  <span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_step</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span>n.breaks <span class="op">=</span> <span class="fl">10</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_continuous</a></span><span class="op">(</span>limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">15</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_vline</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="fl">5</span>, linetype<span class="op">=</span><span class="fl">2</span>, colour<span class="op">=</span><span class="st">"orange"</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_vline</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="fl">5</span>, linetype <span class="op">=</span> <span class="fl">2</span>, colour <span class="op">=</span> <span class="st">"orange"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Warning: Removed 19 rows containing missing values or values outside the scale range</span></span>
 <span><span class="co">#&gt; (`geom_step()`).</span></span></code></pre></div>
-<p><img src="stochasticity_in_likelihood_files/figure-html/unnamed-chunk-5-1.png" width="700">
-Looking at the empirical histogram from this slide, the typical ranges
-implied by the above analytical distribution, where mostly
+<p><img src="stochasticity_in_likelihood_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
+<p>Looking at the empirical histogram from this slide, the typical
+ranges implied by the above analytical distribution, where mostly
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>≤</mo><msub><mi>n</mi><mi>e</mi></msub><mo>≤</mo><mn>9</mn></mrow><annotation encoding="application/x-tex">3\leq n_e \leq 9</annotation></semantics></math>,
 are supported by the simulations.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># plot histogram</span></span>
-<span><span class="va">df_all_trajectories</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">time</span> <span class="op">&lt;=</span> <span class="fl">5</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">trajectory_id</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span>n_prey_eaten<span class="op">=</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/nth.html" class="external-link">last</a></span><span class="op">(</span><span class="va">n_prey_eaten</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">n_prey_eaten</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span><span class="va">df_all_trajectories</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">time</span> <span class="op">&lt;=</span> <span class="fl">5</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">trajectory_id</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span>n_prey_eaten <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/nth.html" class="external-link">last</a></span><span class="op">(</span><span class="va">n_prey_eaten</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">n_prey_eaten</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_histogram.html" class="external-link">geom_histogram</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_continuous</a></span><span class="op">(</span></span>
 <span>    n.breaks <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>    limits<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span></span>
+<span>    limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">10</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
 <span><span class="co">#&gt; `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</span></span>
 <span><span class="co">#&gt; Warning: Removed 2 rows containing missing values or values outside the scale range</span></span>
 <span><span class="co">#&gt; (`geom_bar()`).</span></span></code></pre></div>
@@ -301,51 +281,50 @@ only a rough approximation to the true distribution.</p>
 <code class="sourceCode R"><span><span class="va">create_empirical_pmf</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span></span>
 <span>    <span class="va">df_all_trajectories</span>,</span>
 <span>    <span class="va">time_obs</span><span class="op">)</span> <span class="op">{</span></span>
-<span></span>
 <span>  <span class="co"># all possible numbers of prey remaining</span></span>
 <span>  <span class="va">df_all</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span>n_prey_eaten <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="va">n_prey_initial</span><span class="op">)</span></span>
-<span>  </span>
+<span></span>
 <span>  <span class="co"># empirical distribution</span></span>
-<span>  <span class="va">df_all_trajectories</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">time</span> <span class="op">&lt;=</span> <span class="va">time_obs</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">trajectory_id</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span>n_prey_eaten<span class="op">=</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/nth.html" class="external-link">last</a></span><span class="op">(</span><span class="va">n_prey_eaten</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">n_prey_eaten</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/count.html" class="external-link">count</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">right_join</a></span><span class="op">(</span><span class="va">df_all</span>, by<span class="op">=</span><span class="st">"n_prey_eaten"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>    <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/replace_na.html" class="external-link">replace_na</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="va">n_prey_eaten</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>pmf<span class="op">=</span><span class="va">n</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
+<span>  <span class="va">df_all_trajectories</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">time</span> <span class="op">&lt;=</span> <span class="va">time_obs</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">trajectory_id</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span>n_prey_eaten <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/nth.html" class="external-link">last</a></span><span class="op">(</span><span class="va">n_prey_eaten</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">n_prey_eaten</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/count.html" class="external-link">count</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">right_join</a></span><span class="op">(</span><span class="va">df_all</span>, by <span class="op">=</span> <span class="st">"n_prey_eaten"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/replace_na.html" class="external-link">replace_na</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="va">n_prey_eaten</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>pmf <span class="op">=</span> <span class="va">n</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">n</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
 <span><span class="co"># plot</span></span>
-<span><span class="fu">create_empirical_pmf</span><span class="op">(</span><span class="va">df_all_trajectories</span>, <span class="fl">5</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>type<span class="op">=</span><span class="st">"empirical"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span><span class="va">analytical_pmf_df</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">n_prey_eaten</span>, y<span class="op">=</span><span class="va">pmf</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_col</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill<span class="op">=</span><span class="va">type</span><span class="op">)</span>, position <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/position_dodge.html" class="external-link">position_dodge2</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span><span class="fu">create_empirical_pmf</span><span class="op">(</span><span class="va">df_all_trajectories</span>, <span class="fl">5</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"empirical"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span><span class="va">analytical_pmf_df</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">n_prey_eaten</span>, y <span class="op">=</span> <span class="va">pmf</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_col</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">type</span><span class="op">)</span>, position <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/position_dodge.html" class="external-link">position_dodge2</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_continuous</a></span><span class="op">(</span>n.breaks <span class="op">=</span> <span class="fl">10</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_brewer.html" class="external-link">scale_fill_brewer</a></span><span class="op">(</span>palette <span class="op">=</span> <span class="st">"Dark2"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="stochasticity_in_likelihood_files/figure-html/unnamed-chunk-7-1.png" width="700">
-But if we increase the number of simulations, we generally get a better
-approximation.</p>
+<p><img src="stochasticity_in_likelihood_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
+<p>But if we increase the number of simulations, we generally get a
+better approximation.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">df_all_trajectories</span> <span class="op">&lt;-</span> <span class="fu">simulate_many_trajectories</span><span class="op">(</span></span>
-<span>  n_trajectories<span class="op">=</span><span class="fl">1000</span>,</span>
-<span>  n_prey_initial<span class="op">=</span><span class="fl">10</span>,</span>
-<span>  time_max<span class="op">=</span><span class="fl">10</span>,</span>
-<span>  model<span class="op">=</span><span class="fu"><a href="../reference/model_constant_rate.html">model_constant_rate</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  parameters<span class="op">=</span><span class="va">true_parameters</span></span>
+<code class="sourceCode R"><span><span class="va">df_all_trajectories</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulate_many_trajectories.html">simulate_many_trajectories</a></span><span class="op">(</span></span>
+<span>  n_trajectories <span class="op">=</span> <span class="fl">10000</span>,</span>
+<span>  n_prey_initial <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  time_max <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  model <span class="op">=</span> <span class="fu"><a href="../reference/model_stochastic_degradation.html">model_stochastic_degradation</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  parameters <span class="op">=</span> <span class="va">true_parameters</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># plot</span></span>
-<span><span class="fu">create_empirical_pmf</span><span class="op">(</span><span class="va">df_all_trajectories</span>, <span class="fl">5</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>type<span class="op">=</span><span class="st">"empirical"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span><span class="va">analytical_pmf_df</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">n_prey_eaten</span>, y<span class="op">=</span><span class="va">pmf</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_col</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill<span class="op">=</span><span class="va">type</span><span class="op">)</span>, position <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/position_dodge.html" class="external-link">position_dodge2</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span><span class="fu">create_empirical_pmf</span><span class="op">(</span><span class="va">df_all_trajectories</span>, <span class="fl">5</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"empirical"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span><span class="va">analytical_pmf_df</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">n_prey_eaten</span>, y <span class="op">=</span> <span class="va">pmf</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_col</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">type</span><span class="op">)</span>, position <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/position_dodge.html" class="external-link">position_dodge2</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_continuous</a></span><span class="op">(</span>n.breaks <span class="op">=</span> <span class="fl">10</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_brewer.html" class="external-link">scale_fill_brewer</a></span><span class="op">(</span>palette <span class="op">=</span> <span class="st">"Dark2"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="stochasticity_in_likelihood_files/figure-html/unnamed-chunk-8-1.png" width="700"></p>
@@ -358,14 +337,14 @@ are examples of chemical reaction equation models (CREs). For all bar a
 few isolated cases, it is not possible to write down the probability
 distribution describing the data which these simulations generate.</p>
 <p>Here, using one of the rare instances where it is in fact possible,
-we show that performing many simulations can relatively accurately
+we have shown that performing many simulations can relatively accurately
 determine the true probability distribution.</p>
 <p>This simulation-based approach to determining probability
 distribution is what underlies the <code>log_probability</code> function
 in <code>frbayes</code>. This means that when seeking a maximum
-likelihood estimate, for each value of the parameter, a new set of
-simulations is peformed with which to approximate probability
-distribution of these models. We’ve shown here that, generally, as the
+likelihood estimate, for each new value of the parameter considered, a
+new set of simulations must be performed in order to approximate the
+probability distribution. We’ve shown here that, generally, as the
 number of such simulations increases, the accuracy of the reconstructed
 probability distributions improves.</p>
 <p>When using <code>frbayes</code>, we suggest using relatively large
