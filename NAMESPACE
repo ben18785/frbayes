@@ -2,9 +2,9 @@
 
 export(create_bootstrapped_ecdf_real_simulated)
 export(log_probability)
-export(model_constant_rate)
 export(model_generalised_holling)
 export(model_rogersII)
+export(model_stochastic_degradation)
 export(model_typeIII)
 export(simulate)
 export(simulate_study)

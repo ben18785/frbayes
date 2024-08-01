@@ -15,12 +15,12 @@
 #' }
 #'
 #' @examples
-#' model <- model_constant_rate()
+#' model <- model_stochastic_degradation()
 #' parameters <- list(rate = 0.1)
 #' model(10, parameters)  # Returns 1.0
 #'
 #' @export
-model_constant_rate <- function() {
+model_stochastic_degradation <- function() {
   function(prey, parameters) {
     rate <- parameters$rate
     rate * prey

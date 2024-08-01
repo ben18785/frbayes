@@ -39,7 +39,7 @@ if any other input validations fail, the function will stop with an error messag
 # Example usage (assuming appropriate model and parameters):
 data <- data.frame(n_prey_initial = c(10, 20, 30), n_replicates = c(100, 100, 100))
 time_max <- 10
-model <- model_constant_rate()
+model <- model_stochastic_degradation()
 parameters <- list(rate = 0.1)
 result <- simulate_study(data, time_max, model, parameters)
 }

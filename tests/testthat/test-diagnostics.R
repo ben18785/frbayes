@@ -57,6 +57,10 @@ test_that("create_bootstrapped_ecdf_real_simulated handles inputs and outputs co
     n_bootstraps = -1, data = data, time_max = time_max, model = model, mle_parameters = mle_parameters
   ), "Parameter 'n_bootstraps' must be a positive integer.")
 
+  incomplete_data <- data.frame(n_prey_initial = c(10, 20, 30))
+  expect_error(create_bootstrapped_ecdf_real_simulated(n_bootstraps = 10, data = incomplete_data, time_max = 10, model = dummy_model, mle_parameters = list(rate = 0.1)),
+               "Data frame must contain columns 'n_prey_initial' and 'n_prey_eaten'.")
+
   expect_error(create_bootstrapped_ecdf_real_simulated(
     n_bootstraps = 5, data = "not_a_dataframe", time_max = time_max, model = model, mle_parameters = mle_parameters
   ), "Parameter 'data' must be a data frame.")

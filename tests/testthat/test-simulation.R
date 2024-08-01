@@ -76,7 +76,7 @@ test_that("simulate_trajectory handles inputs and outputs correctly", {
   result <- simulate_trajectory(
     n_prey_initial = n_prey_initial,
     time_max = time_max,
-    model = model_constant_rate(),
+    model = model_stochastic_degradation(),
     parameters = parameters
   )
 
@@ -90,13 +90,139 @@ test_that("simulate_trajectory handles inputs and outputs correctly", {
   expect_true(all(diff(result$n_prey_remaining) <= 0))
 })
 
+# Dummy model function for testing
+dummy_model <- function(n_prey, parameters) {
+  return(0.1)  # Return a constant rate for simplicity
+}
+
+# Test for non-negative integer 'n_prey_initial'
+test_that("simulate_trajectory handles non-integer 'n_prey_initial'", {
+  expect_error(simulate_trajectory(n_prey_initial = 10.5, time_max = 10, model = dummy_model, parameters = list(rate = 0.1)),
+               "Parameter 'n_prey_initial' must be a non-negative integer.")
+  expect_error(simulate_trajectory(n_prey_initial = -10, time_max = 10, model = dummy_model, parameters = list(rate = 0.1)),
+               "Parameter 'n_prey_initial' must be a non-negative integer.")
+  expect_error(simulate_trajectory(n_prey_initial = "ten", time_max = 10, model = dummy_model, parameters = list(rate = 0.1)),
+               "Parameter 'n_prey_initial' must be a non-negative integer.")
+})
+
+# Test for positive numeric 'time_max'
+test_that("simulate_trajectory handles non-numeric 'time_max'", {
+  expect_error(simulate_trajectory(n_prey_initial = 10, time_max = -10, model = dummy_model, parameters = list(rate = 0.1)),
+               "Parameter 'time_max' must be a positive numeric value.")
+  expect_error(simulate_trajectory(n_prey_initial = 10, time_max = "ten", model = dummy_model, parameters = list(rate = 0.1)),
+               "Parameter 'time_max' must be a positive numeric value.")
+})
+
+# Test for function 'model'
+test_that("simulate_trajectory handles non-function 'model'", {
+  expect_error(simulate_trajectory(n_prey_initial = 10, time_max = 10, model = "dummy_model", parameters = list(rate = 0.1)),
+               "Parameter 'model' must be a function.")
+})
+
+# Test for non-null list of parameters
+test_that("simulate_trajectory handles invalid 'parameters'", {
+  expect_error(simulate_trajectory(n_prey_initial = 10, time_max = 10, model = dummy_model, parameters = NULL),
+               "Parameter 'parameters' must be a non-null list of named parameters.")
+  expect_error(simulate_trajectory(n_prey_initial = 10, time_max = 10, model = dummy_model, parameters = list(NULL)),
+               "Parameter 'parameters' must be a non-null list of named parameters.")
+})
+
+# Test for correct execution with valid inputs
+test_that("simulate_trajectory works with valid inputs", {
+  result <- simulate_trajectory(n_prey_initial = 10, time_max = 10, model = dummy_model, parameters = list(rate = 0.1))
+  expect_s3_class(result, "tbl_df")
+  expect_true(all(c("time", "n_prey_remaining", "n_prey_eaten") %in% colnames(result)))
+})
+
+# Parameters for testing
+dummy_parameters <- list(rate = 0.1)
+
+test_that("simulate_many_trajectories returns a data frame", {
+  result <- simulate_many_trajectories(
+    n_trajectories = 10,
+    n_prey_initial = 50,
+    time_max = 10,
+    model = dummy_model,
+    parameters = dummy_parameters
+  )
+
+  expect_true(is.data.frame(result))
+})
+
+test_that("simulate_many_trajectories returns the correct columns", {
+  result <- simulate_many_trajectories(
+    n_trajectories = 10,
+    n_prey_initial = 50,
+    time_max = 10,
+    model = dummy_model,
+    parameters = dummy_parameters
+  )
+
+  expect_true(all(c("time", "n_prey_remaining", "n_prey_eaten", "trajectory_id") %in% colnames(result)))
+})
+
+test_that("simulate_many_trajectories generates the correct number of trajectories", {
+  n_trajectories <- 10
+  result <- simulate_many_trajectories(
+    n_trajectories = n_trajectories,
+    n_prey_initial = 50,
+    time_max = 10,
+    model = dummy_model,
+    parameters = dummy_parameters
+  )
+
+  expect_equal(length(unique(result$trajectory_id)), n_trajectories)
+})
+
+test_that("simulate_many_trajectories input validation works correctly", {
+
+  parameters <- list(rate = 0.1)
+
+  # Test n_trajectories
+  expect_error(simulate_many_trajectories("10", 10, 10, dummy_model, parameters),
+               "Parameter 'n_trajectories' must be a positive integer.")
+  expect_error(simulate_many_trajectories(-10, 10, 10, dummy_model, parameters),
+               "Parameter 'n_trajectories' must be a positive integer.")
+  expect_error(simulate_many_trajectories(0, 10, 10, dummy_model, parameters),
+               "Parameter 'n_trajectories' must be a positive integer.")
+  expect_error(simulate_many_trajectories(10.5, 10, 10, dummy_model, parameters),
+               "Parameter 'n_trajectories' must be a positive integer.")
+
+  # Test n_prey_initial
+  expect_error(simulate_many_trajectories(10, "10", 10, dummy_model, parameters),
+               "Parameter 'n_prey_initial' must be a non-negative integer.")
+  expect_error(simulate_many_trajectories(10, -10, 10, dummy_model, parameters),
+               "Parameter 'n_prey_initial' must be a non-negative integer.")
+  expect_error(simulate_many_trajectories(10, 10.5, 10, dummy_model, parameters),
+               "Parameter 'n_prey_initial' must be a non-negative integer.")
+
+  # Test time_max
+  expect_error(simulate_many_trajectories(10, 10, "10", dummy_model, parameters),
+               "Parameter 'time_max' must be a positive numeric value.")
+  expect_error(simulate_many_trajectories(10, 10, -10, dummy_model, parameters),
+               "Parameter 'time_max' must be a positive numeric value.")
+  expect_error(simulate_many_trajectories(10, 10, 0, dummy_model, parameters),
+               "Parameter 'time_max' must be a positive numeric value.")
+
+  # Test model
+  expect_error(simulate_many_trajectories(10, 10, 10, "dummy_model", parameters),
+               "Parameter 'model' must be a function.")
+
+  # Test parameters
+  expect_error(simulate_many_trajectories(10, 10, 10, dummy_model, NULL),
+               "Parameter 'parameters' must be a non-null list of named parameters.")
+  expect_error(simulate_many_trajectories(10, 10, 10, dummy_model, list(NULL)),
+               "Parameter 'parameters' must be a non-null list of named parameters.")
+})
+
+
 test_that("simulate returns a tibble with the correct structure", {
   n_replicates <- 5
   n_prey_initial <- 10
   time_max <- 5
   set.seed(123)  # Set seed for reproducibility
 
-  result <- simulate(n_replicates, n_prey_initial, time_max, model_constant_rate(), params)
+  result <- simulate(n_replicates, n_prey_initial, time_max, model_stochastic_degradation(), params)
 
   expect_s3_class(result, "tbl_df")
   expect_equal(ncol(result), 4)
@@ -105,13 +231,13 @@ test_that("simulate returns a tibble with the correct structure", {
 })
 
 test_that("simulate validates inputs correctly", {
-  expect_error(simulate("a", 10, 5, model_constant_rate(), params), "n_replicates must be a positive integer")
-  expect_error(simulate(5, "b", 5, model_constant_rate(), params), "n_prey_initial must be a positive integer")
-  expect_error(simulate(5, 10, "c", model_constant_rate(), params), "time_max must be a positive number")
+  expect_error(simulate("a", 10, 5, model_stochastic_degradation(), params), "n_replicates must be a positive integer")
+  expect_error(simulate(5, "b", 5, model_stochastic_degradation(), params), "n_prey_initial must be a positive integer")
+  expect_error(simulate(5, 10, "c", model_stochastic_degradation(), params), "time_max must be a positive number")
   expect_error(simulate(5, 10, 5, "not_a_function", params), "model must be a function")
-  expect_error(simulate(-5, 10, 5, model_constant_rate(), params), "n_replicates must be a positive integer")
-  expect_error(simulate(5, -10, 5, model_constant_rate(), params), "n_prey_initial must be a positive integer")
-  expect_error(simulate(5, 10, -5, model_constant_rate(), params), "time_max must be a positive number")
+  expect_error(simulate(-5, 10, 5, model_stochastic_degradation(), params), "n_replicates must be a positive integer")
+  expect_error(simulate(5, -10, 5, model_stochastic_degradation(), params), "n_prey_initial must be a positive integer")
+  expect_error(simulate(5, 10, -5, model_stochastic_degradation(), params), "time_max must be a positive number")
 })
 
 test_that("simulate returns expected results for given parameters", {
@@ -120,7 +246,7 @@ test_that("simulate returns expected results for given parameters", {
   time_max <- 10
   set.seed(123)  # Set seed for reproducibility
 
-  result <- simulate(n_replicates, n_prey_initial, time_max, model_constant_rate(), params)
+  result <- simulate(n_replicates, n_prey_initial, time_max, model_stochastic_degradation(), params)
 
   # Since the simulation uses random numbers, we check for expected tibble structure and values within expected ranges
   expect_equal(result$replicate_id, seq_len(n_replicates))
@@ -130,7 +256,7 @@ test_that("simulate returns expected results for given parameters", {
 
   # test simulate runs with n_prey_initial=1
   n_prey_initial <- 1
-  result <- simulate(n_replicates, n_prey_initial, time_max, model_constant_rate(), params)
+  result <- simulate(n_replicates, n_prey_initial, time_max, model_stochastic_degradation(), params)
   expect_equal(result$replicate_id, seq_len(n_replicates))
   expect_equal(result$n_prey_initial, rep(n_prey_initial, n_replicates))
   expect_true(all(result$n_prey_eaten >= 0 & result$n_prey_eaten <= n_prey_initial))
@@ -144,7 +270,7 @@ test_that("simulate approximates correct analytical pmf with constant rates", {
   n_prey_initial <- 10
   time_max <- 5
   set.seed(123)
-  result <- simulate(n_replicates, n_prey_initial, time_max, model_constant_rate(), params)
+  result <- simulate(n_replicates, n_prey_initial, time_max, model_stochastic_degradation(), params)
 
   df_approx <- result %>%
     dplyr::group_by(n_prey_remaining) %>%
@@ -215,7 +341,7 @@ test_that("simulate_study throws errors for invalid inputs", {
     n_replicates = c(5, 10)
   )
 
-  mock_model <- model_constant_rate()
+  mock_model <- model_stochastic_degradation()
   parameters <- list(rate=0.1)
 
   # Test invalid `data` input

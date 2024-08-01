@@ -179,7 +179,7 @@ create_pmf_log <- function(simulation_result, n_prey_initial, alpha) {
 #' parameters <- list(rate = 0.1)  # Example parameter for a constant rate model
 #' ns_prey_remaining <- c(0, 1, 2)  # States of prey remaining
 #' n_prey_initial <- 2
-#' model <- model_constant_rate()  # Using a constant rate model
+#' model <- model_stochastic_degradation()  # Using a constant rate model
 #' time_max <- 10
 #'
 #' # Compute log probabilities

@@ -1,0 +1,39 @@
+---
+title: "Custom models in frbayes"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(frbayes)
+```
+
+In this vignette, we show how custom models for the functional responses can be used in `frbayes`.
+
+## A Rogers type-II model
+This type of model has a rate of prey consumption given by:
+
+$$
+\frac{a \cdot \text{prey}}{1 + a \cdot h \cdot \text{prey}},
+$$
+
+This model can be extended to allow prey to die from natural causes. If we assume the rate of death from natural causes is constant, the rate at which prey diminish is then given by:
+
+$$
+\frac{a \cdot \text{prey}}{1 + a \cdot h \cdot \text{prey}} - \kappa \cdot \text{prey}
+$$
+
+We can simulate individual experimental trajectories from this model in `frbayes`.
+
+```{r}
+# convenience function
+
+
+
+```
+

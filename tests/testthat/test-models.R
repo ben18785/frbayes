@@ -1,6 +1,6 @@
-test_that("model_constant_rate returns a function that calculates correct propensity", {
+test_that("model_stochastic_degradation returns a function that calculates correct propensity", {
   # Create the model function
-  model <- model_constant_rate()
+  model <- model_stochastic_degradation()
 
   # Define parameters
   parameters <- list(rate = 0.1)

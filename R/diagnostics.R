@@ -164,7 +164,7 @@ create_bootstrapped_ecdf_simulated <- function(
 #' experimental_setup <- data.frame(n_prey_initial = c(10, 20, 30),
 #' n_replicates = c(100, 100, 100))
 #' time_max <- 10
-#' model <- model_constant_rate()
+#' model <- model_stochastic_degradation()
 #' parameters <- list(rate = 0.1)
 #' data <- simulate_study(experimental_setup, time_max, model, parameters)
 #'

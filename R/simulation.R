@@ -1,7 +1,8 @@
 #' Simulate a Single Run of a Prey-Predator Model
 #'
 #' This function simulates a single run of a prey-predator model over a specified
-#' period of time, given initial conditions and model parameters.
+#' period of time, given initial conditions and model parameters. The simulation
+#' algorithm used is the Gillespie algorithm.
 #'
 #' @param n_prey_initial An integer representing the initial number of prey.
 #' @param time_max A numeric value indicating the maximum time for the simulation.
@@ -11,11 +12,31 @@
 #' @return A data frame with numbers of prey remaining (and eaten) by time.
 #' @export
 simulate_trajectory <- function(n_prey_initial, time_max, model, parameters) {
+
+  # Input validation
+  if (!is.numeric(n_prey_initial) || length(n_prey_initial) != 1 || n_prey_initial < 0 || n_prey_initial != as.integer(n_prey_initial)) {
+    stop("Parameter 'n_prey_initial' must be a non-negative integer.")
+  }
+
+  if (!is.numeric(time_max) || length(time_max) != 1 || time_max <= 0) {
+    stop("Parameter 'time_max' must be a positive numeric value.")
+  }
+
+  if (!is.function(model)) {
+    stop("Parameter 'model' must be a function.")
+  }
+
+  if (!is.list(parameters) || any(sapply(parameters, is.null))) {
+    stop("Parameter 'parameters' must be a non-null list of named parameters.")
+  }
+
   t <- 0
   n_prey_remaining <- n_prey_initial
   event_times <- c(0)
   prey_remaining <- c(n_prey_initial)
+
   while(t < time_max & n_prey_remaining > 0) {
+
     r <- stats::runif(1)
     propensity <- model(n_prey_remaining, parameters)
 
@@ -37,6 +58,69 @@ simulate_trajectory <- function(n_prey_initial, time_max, model, parameters) {
     n_prey_remaining=prey_remaining
   ) %>%
     dplyr::mutate(n_prey_eaten=n_prey_initial-n_prey_remaining)
+}
+
+#' Simulate Multiple Runs of a Prey-Predator Model
+#'
+#' This function simulates multiple runs of a prey-predator model over a specified
+#' period of time, given initial conditions and model parameters. The simulation
+#' algorithm used is the Gillespie algorithm.
+#'
+#' @param n_trajectories An integer representing the number of trajectories to simulate.
+#' @param n_prey_initial An integer representing the initial number of prey for each trajectory.
+#' @param time_max A numeric value indicating the maximum time for the simulations.
+#' @param model A function that calculates the propensity given the current number of prey and parameters.
+#' @param parameters A list of named parameters required by the model function.
+#'
+#' @return A data frame with columns `time`, `n_prey_remaining`, `n_prey_eaten`,
+#' and `trajectory_id`, representing the simulated data for all trajectories.
+#' @export
+simulate_many_trajectories <- function(
+    n_trajectories,
+    n_prey_initial,
+    time_max,
+    model,
+    parameters){
+
+  # Input validation
+  if (!is.numeric(n_trajectories) || length(n_trajectories) != 1 || n_trajectories <= 0 || n_trajectories != as.integer(n_trajectories)) {
+    stop("Parameter 'n_trajectories' must be a positive integer.")
+  }
+
+  if (!is.numeric(n_prey_initial) || length(n_prey_initial) != 1 || n_prey_initial < 0 || n_prey_initial != as.integer(n_prey_initial)) {
+    stop("Parameter 'n_prey_initial' must be a non-negative integer.")
+  }
+
+  if (!is.numeric(time_max) || length(time_max) != 1 || time_max <= 0) {
+    stop("Parameter 'time_max' must be a positive numeric value.")
+  }
+
+  if (!is.function(model)) {
+    stop("Parameter 'model' must be a function.")
+  }
+
+  if (!is.list(parameters) || any(sapply(parameters, is.null))) {
+    stop("Parameter 'parameters' must be a non-null list of named parameters.")
+  }
+
+  for(i in 1:n_trajectories) {
+
+    df_single_replicate <- simulate_trajectory(
+      n_prey_initial = n_prey_initial,
+      time_max = time_max,
+      model = model,
+      parameters = parameters
+    ) %>%
+      dplyr::mutate(trajectory_id=i)
+
+    if(i == 1)
+      df_all_trajectories <- df_single_replicate
+    else
+      df_all_trajectories <- df_all_trajectories %>%
+        dplyr::bind_rows(df_single_replicate)
+  }
+
+  df_all_trajectories
 }
 
 
@@ -151,7 +235,7 @@ simulate <- function(n_replicates, n_prey_initial, time_max, model, parameters) 
 #' # Example usage (assuming appropriate model and parameters):
 #' data <- data.frame(n_prey_initial = c(10, 20, 30), n_replicates = c(100, 100, 100))
 #' time_max <- 10
-#' model <- model_constant_rate()
+#' model <- model_stochastic_degradation()
 #' parameters <- list(rate = 0.1)
 #' result <- simulate_study(data, time_max, model, parameters)
 #' @export

@@ -188,3 +188,5 @@ chain %>%
   geom_line() +
   facet_wrap(~name, scales = "free")
 ```
+
+Here, clearly more iterations are necessary in order to obtain convergence. This is mainly due to the model being relatively complicated relative to the relatively few data points being used to fit it.

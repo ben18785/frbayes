@@ -146,7 +146,7 @@ test_that("log_probability_single_prey_initial calculates log probability correc
   alpha <- 1
 
   # Create a mock model function
-  model <- model_constant_rate()
+  model <- model_stochastic_degradation()
 
   # Calculate log probabilities
   n_replicates <- 10000
@@ -211,7 +211,7 @@ test_that("log_probability handles invalid alpha values", {
 test_that("log_probability returns the sum of log_probabilities from log_probability_single_prey_initial", {
   # Define parameters for the test
   parameters <- list(rate=0.1)
-  model <- model_constant_rate()
+  model <- model_stochastic_degradation()
   time_max <- 1
   n_replicates <- 10000
   alpha <- 1

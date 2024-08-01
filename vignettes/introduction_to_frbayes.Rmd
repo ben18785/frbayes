@@ -60,26 +60,18 @@ df_single_replicate %>%
   scale_y_continuous(n.breaks = 10) +
   scale_x_continuous(limits = c(0, 5))
 ```
+
 Our simulation method is _stochastic_, meaning we get a variety of such trajectories each time the experiment is run. We show now 10 such trajectories.
+
 ```{r}
-# generate many trajectories
-n_trajectories <- 10
-for(i in 1:n_trajectories) {
-  
-  df_single_replicate <- simulate_trajectory(
-    n_prey_initial = 10,
-    time_max = 10,
-    model = model_rogersII(),
-    parameters = true_parameters
-  ) %>% 
-    dplyr::mutate(trajectory_id=i)
-  
-  if(i == 1)
-    df_all_trajectories <- df_single_replicate
-  else
-    df_all_trajectories <- df_all_trajectories %>% 
-      dplyr::bind_rows(df_single_replicate)
-}
+# generate trajectories
+df_all_trajectories <- simulate_many_trajectories(
+  n_trajectories = 10,
+  n_prey_initial = 10,
+  time_max = 5,
+  model = model_rogersII(),
+  parameters = true_parameters
+)
 
 # plot
 df_all_trajectories %>% 
@@ -89,8 +81,11 @@ df_all_trajectories %>%
   geom_step(alpha=0.5) +
   scale_y_continuous(n.breaks = 10)
 ```
+
 ### Typical experiment setup
-In a typical experiment, there is a time chosen at which to observe the number of prey eaten. Here, we assume this is at $\text{time}=1$. This effectively means that we slice through the trajectories at this time and record the number of prey at that point: here, this gives us a number of prey eaten that roughly ranges around the 4-9 range.
+
+In a typical experiment, there is a time chosen at which to observe the number of prey eaten. Here, we assume this is at $\text{time}=1$. This effectively means that we slice through the trajectories at this time and record the number of prey at that point: here, this gives us a number of prey eaten that roughly ranges between 4-9.
+
 ```{r}
 # plot slice
 df_all_trajectories %>% 
@@ -101,9 +96,11 @@ df_all_trajectories %>%
   scale_y_continuous(n.breaks = 10) +
   geom_vline(xintercept = 1, linetype=2, colour="orange")
 ```
+
 Usually, experiments then repeat this exercise but under a variety of experimental conditions, particularly across a range of initial prey counts.
 
 We now replicate one such experiment. We suppose that 100 replicates were performed at initial prey counts of: 5, 10, 20, 30, 40, and that the system was observed at $time=1$. Using this experimental setup, we can simulate the output of running one such experiment.
+
 ```{r}
 # experiment details
 experimental_setup <- data.frame(
@@ -126,7 +123,7 @@ df %>%
 ```
 
 ### Fitting to an experiment's data
-We now fit a model to these data using maximum likelihood estimation. To do so, we use the `log_probability` function. We first show how the log-likelihood varies as $a$ is varied with $h$ fixed at its true value. The log-likelihood is a little rough (owing to the stochasticity in how we calculate it), but it is peaked near the value used to generate the data.
+We now fit a model to these data using maximum likelihood estimation. To do so, we use the `log_probability` function. We first show how the log-likelihood varies as $a$ is varied with $h$ fixed at its true value. The log-likelihood is a little rough ([owing to the stochasticity in how we calculate it](https://ben18785.github.io/frbayes/articles/stochasticity_in_likelihood.html)), but it is peaked near the value used to generate the data.
 ```{r}
 as <- seq(1, 4, 0.1)
 log_likelihood <- vector(length = length(as))
@@ -167,10 +164,14 @@ for(i in seq_along(hs)) {
 tibble(h=hs, log_likelihood=log_likelihood) %>% 
   ggplot(aes(x=h, y=log_likelihood)) +
   geom_line() +
-  geom_vline(xintercept = true_parameters$h, linetype=2)
+  geom_vline(xintercept = true_parameters$h,
+             linetype=2,
+             colour="orange")
 ```
 
+
 We can also look at the 2D likelihood surface. Here, we mark the true parameter set as a point.
+
 ```{r}
 parameter_combinations <- expand_grid(a=as, h=hs)
 parameter_combinations$z <- NA
@@ -259,9 +260,11 @@ df %>%
   geom_jitter(height = 0.3, alpha=0.8) +
   xlab("n_prey_initial")
 ```
+
 We can also plot the empirical cumulative distribution function (eCDF) versus the model-simulated eCDFs. If the model fitted to the data is reasonable, we would expect these lines to overlap with the $y=x$ line.
 
 Here, we plot these for each value of `n_prey_initial` across 100 bootstrapped samples. The model fit isn't perfect perhaps owing to the difficulty of maximising the likelihood here.
+
 ```{r}
 # generate ecdfs
 n_bootstraps <- 100
