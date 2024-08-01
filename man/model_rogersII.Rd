@@ -31,6 +31,6 @@ where \code{a} is the maximum rate of consumption and \code{h} is the handling t
 \examples{
 model <- model_rogersII()
 parameters <- list(a = 0.2, h = 0.5)
-model(10, parameters)  # Computes the rate of prey consumption for 10 prey
+model(10, parameters) # Computes the rate of prey consumption for 10 prey
 
 }

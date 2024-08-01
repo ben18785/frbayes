@@ -25,6 +25,6 @@ can be used in simulations of prey-predator interactions.
 \examples{
 model <- model_stochastic_degradation()
 parameters <- list(rate = 0.1)
-model(10, parameters)  # Returns 1.0
+model(10, parameters) # Returns 1.0
 
 }

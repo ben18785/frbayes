@@ -28,7 +28,7 @@ glimpse(frbayes::bythotrephes)
 
 # plot by prey size
 frbayes::bythotrephes %>%
-  ggplot(aes(x=n_prey_initial, y=n_prey_eaten)) +
+  ggplot(aes(x = n_prey_initial, y = n_prey_eaten)) +
   geom_jitter(height = 0.3) +
   facet_wrap(~size)
 ```
@@ -43,7 +43,7 @@ where $b>0$, $0<h<1$ and $q>0$.
 
 ```{r}
 f_likelihood <- function(theta) {
-  parameters <- list(b=1, h=0.4, q=0.01)
+  parameters <- list(b = 1, h = 0.4, q = 0.01)
   parameters[1] <- theta[1]
   parameters[2] <- theta[2]
   parameters[3] <- theta[3]
@@ -51,15 +51,16 @@ f_likelihood <- function(theta) {
     parameters = parameters,
     data = frbayes::bythotrephes %>% dplyr::filter(size == "large"),
     model = model_generalised_holling(),
-    n_replicates = 1000)
+    n_replicates = 1000
+  )
 }
 
 # use R's standard optim
 fit <- optim(
   c(1.5, 0.2, 0.1),
   f_likelihood,
-  lower=c(0.01, 0.01, 0.01),
-  upper=c(5, 1, 1.5)
+  lower = c(0.01, 0.01, 0.01),
+  upper = c(5, 1, 1.5)
 )
 
 # output pars
@@ -72,15 +73,15 @@ print(paste0("b = ", b, ", h = ", h, ", q = ", q))
 We now examine the fit of model to data.
 ```{r}
 experimental_setup <- frbayes::bythotrephes %>%
-  filter(size=="large") %>%
+  filter(size == "large") %>%
   group_by(n_prey_initial) %>%
   count() %>%
-  mutate(n_replicates=10000) # choose a large number here to explore full predictive distribution
+  mutate(n_replicates = 10000) # choose a large number here to explore full predictive distribution
 
 # generate synthetic data at max likelihood estimates
-mle_parameters <- list(b=b, h=h, q=q)
+mle_parameters <- list(b = b, h = h, q = q)
 df_sim <- simulate_study(
-  data=experimental_setup,
+  data = experimental_setup,
   time_max = 1,
   model = model_generalised_holling(),
   parameters = mle_parameters
@@ -88,9 +89,9 @@ df_sim <- simulate_study(
 
 # plot
 frbayes::bythotrephes %>%
-  filter(size=="large") %>%
-  ggplot(aes(x=as.factor(n_prey_initial), y=n_prey_eaten)) +
-  geom_violin(data=df_sim) +
+  filter(size == "large") %>%
+  ggplot(aes(x = as.factor(n_prey_initial), y = n_prey_eaten)) +
+  geom_violin(data = df_sim) +
   geom_jitter(height = 0.2, width = 0.1) +
   xlab("n_prey_initial")
 ```
@@ -103,23 +104,23 @@ To use this algorithm, we also need to specify priors on the parameters, which h
 
 ```{r}
 log_posterior <- function(parameters) {
-
   b <- parameters$b
   h <- parameters$h
   q <- parameters$q
   log_prior <- (
-    if_else(b < 0 | b > 10, -Inf, 1/10) +
-    if_else(h < 0 | h > 1, -Inf, 1) +
-    if_else(q < 0 | q > 2, -Inf, 1/2)
+    if_else(b < 0 | b > 10, -Inf, 1 / 10) +
+      if_else(h < 0 | h > 1, -Inf, 1) +
+      if_else(q < 0 | q > 2, -Inf, 1 / 2)
   )
-  if(log_prior == -Inf) {
+  if (log_prior == -Inf) {
     return(-Inf)
   }
   log_likelihood <- log_probability(
     parameters = parameters,
     data = frbayes::bythotrephes %>% dplyr::filter(size == "large"),
     model = model_generalised_holling(),
-    n_replicates = 1000)
+    n_replicates = 1000
+  )
   log_likelihood + log_prior
 }
 
@@ -130,7 +131,7 @@ propose_parameters <- function(parameters_current, step_sizes) {
   b_p <- rnorm(1, b, step_sizes$b)
   h_p <- rnorm(1, h, step_sizes$h)
   q_p <- rnorm(1, q, step_sizes$q)
-  list(b=b_p, h=h_p, q=q_p)
+  list(b = b_p, h = h_p, q = q_p)
 }
 
 step_accept_reject <- function(parameters_current, step_sizes) {
@@ -138,27 +139,27 @@ step_accept_reject <- function(parameters_current, step_sizes) {
   log_p_current <- log_posterior(parameters_current)
   log_p_proposed <- log_posterior(parameters_proposed)
   log_r <- log(runif(1))
-  if(log_r < (log_p_proposed - log_p_current))
+  if (log_r < (log_p_proposed - log_p_current)) {
     parameters_new <- parameters_proposed
-  else
+  } else {
     parameters_new <- parameters_current
+  }
   parameters_new
 }
 
 mcmc <- function(n_iterations, parameters_initial, step_sizes) {
-
-  df <- data.frame(iteration=rep(NA, (n_iterations + 1))) %>%
+  df <- data.frame(iteration = rep(NA, (n_iterations + 1))) %>%
     mutate(
-      b=NA,
-      h=NA,
-      q=NA
-  )
+      b = NA,
+      h = NA,
+      q = NA
+    )
   df$iteration[1] <- 0
   df$b[1] <- parameters_initial$b
   df$h[1] <- parameters_initial$h
   df$q[1] <- parameters_initial$q
   parameters_current <- parameters_initial
-  for(i in 1:n_iterations) {
+  for (i in 1:n_iterations) {
     parameters_new <- step_accept_reject(parameters_current, step_sizes)
     df$iteration[i + 1] <- i
     df$b[i + 1] <- parameters_new$b
@@ -172,19 +173,19 @@ mcmc <- function(n_iterations, parameters_initial, step_sizes) {
 # run MCMC - takes a few minutes
 max_iterations <- 400
 chain <- mcmc(
-  n_iterations=max_iterations,
-  list(b=5, h=0.17, q=1),
-  list(b=0.5, h=0.05, q=0.05)
+  n_iterations = max_iterations,
+  list(b = 5, h = 0.17, q = 1),
+  list(b = 0.5, h = 0.05, q = 0.05)
 )
 
 # print acceptance rate
-mean(diff(chain$b)!=0)
+mean(diff(chain$b) != 0)
 
 # plot results
 chain %>%
   pivot_longer(c(b, h, q)) %>%
   filter(iteration > max_iterations / 2) %>% # remove warm-up iterations
-  ggplot(aes(x=iteration, y=value)) +
+  ggplot(aes(x = iteration, y = value)) +
   geom_line() +
   facet_wrap(~name, scales = "free")
 ```

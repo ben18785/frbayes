@@ -20,5 +20,6 @@ A data frame with numbers of prey remaining (and eaten) by time.
 }
 \description{
 This function simulates a single run of a prey-predator model over a specified
-period of time, given initial conditions and model parameters.
+period of time, given initial conditions and model parameters. The simulation
+algorithm used is the Gillespie algorithm.
 }

@@ -1,5 +1,3 @@
-
-
 #' Create Approximate Counts from Simulation Results
 #'
 #' This function processes a dataframe of simulation results to count occurrences of each
@@ -28,10 +26,9 @@
 #' @import dplyr
 #' @import tidyr
 create_approx_counts <- function(simulation_result, n_prey_initial) {
-
   # Count occurrences of each value of n_prey_remaining
-    df_counts <- simulation_result %>%
-      dplyr::count(.data$n_prey_remaining)
+  df_counts <- simulation_result %>%
+    dplyr::count(.data$n_prey_remaining)
 
   # Create a tibble with all possible values of n_prey_remaining
   df_all <- dplyr::tibble(n_prey_remaining = 0:n_prey_initial)
@@ -77,18 +74,17 @@ create_approx_counts <- function(simulation_result, n_prey_initial) {
 #' @import dplyr
 #' @importFrom tidyr replace_na
 construct_empirical_pmf_log_df <- function(simulation_result, n_prey_initial, alpha) {
-
   # prior measure is uniform on set of possible n_prey_remaining
   p <- 1 / (n_prey_initial + 1)
   H <- rep(p, (n_prey_initial + 1))
 
   # use Dirichlet Process posterior mean as posterior measure
   df_pmf <- create_approx_counts(simulation_result, n_prey_initial) %>%
-    dplyr::mutate(H=H) %>%
-    dplyr::mutate(pmf=alpha*H+n) %>%
-    dplyr::mutate(pmf=.data$pmf/sum(.data$pmf)) %>%
+    dplyr::mutate(H = H) %>%
+    dplyr::mutate(pmf = alpha * H + n) %>%
+    dplyr::mutate(pmf = .data$pmf / sum(.data$pmf)) %>%
     dplyr::select(-c("n", "H")) %>%
-    dplyr::mutate(log_prob=log(.data$pmf))
+    dplyr::mutate(log_prob = log(.data$pmf))
 
   df_pmf
 }
@@ -128,13 +124,12 @@ construct_empirical_pmf_log_df <- function(simulation_result, n_prey_initial, al
 #' log_prob_neg <- pmf_log_function(-1)
 #' log_prob_out_of_bound <- pmf_log_function(3)
 create_pmf_log <- function(simulation_result, n_prey_initial, alpha) {
-
   df_pmf <- construct_empirical_pmf_log_df(simulation_result, n_prey_initial, alpha)
 
   pmf_log <- function(n_prey_remaining) {
-
-    if(n_prey_remaining < 0 || n_prey_remaining > n_prey_initial)
+    if (n_prey_remaining < 0 || n_prey_remaining > n_prey_initial) {
       return(-Inf)
+    }
 
     if (!is.numeric(n_prey_remaining) || round(n_prey_remaining) != n_prey_remaining) {
       return(-Inf)
@@ -176,10 +171,10 @@ create_pmf_log <- function(simulation_result, n_prey_initial, alpha) {
 #'
 #' @examples
 #' # Example usage
-#' parameters <- list(rate = 0.1)  # Example parameter for a constant rate model
-#' ns_prey_remaining <- c(0, 1, 2)  # States of prey remaining
+#' parameters <- list(rate = 0.1) # Example parameter for a constant rate model
+#' ns_prey_remaining <- c(0, 1, 2) # States of prey remaining
 #' n_prey_initial <- 2
-#' model <- model_stochastic_degradation()  # Using a constant rate model
+#' model <- model_stochastic_degradation() # Using a constant rate model
 #' time_max <- 10
 #'
 #' # Compute log probabilities
@@ -197,14 +192,13 @@ log_probability_single_prey_initial <- function(
     parameters,
     ns_prey_remaining, n_prey_initial,
     model, time_max,
-    n_replicates=1000, alpha=1) {
-
+    n_replicates = 1000, alpha = 1) {
   simulation_result <- simulate(n_replicates, n_prey_initial, time_max, model, parameters)
   log_prob_function <- create_pmf_log(simulation_result, n_prey_initial, alpha)
 
   log_prob <- 0
-  for(i in seq_along(ns_prey_remaining)) {
-    log_prob = log_prob + log_prob_function(ns_prey_remaining[i])
+  for (i in seq_along(ns_prey_remaining)) {
+    log_prob <- log_prob + log_prob_function(ns_prey_remaining[i])
   }
 
   log_prob
@@ -249,9 +243,13 @@ log_probability_single_prey_initial <- function(
 #' @examples
 #' # Example usage:
 #' parameters <- list(rate = 0.1)
-#' data <- tibble::tibble(n_prey_initial = c(10, 20, 30),
-#'                        n_prey_remaining = c(5, 10, 15))
-#' model <- function(prey, parameters) { parameters$rate * prey }
+#' data <- tibble::tibble(
+#'   n_prey_initial = c(10, 20, 30),
+#'   n_prey_remaining = c(5, 10, 15)
+#' )
+#' model <- function(prey, parameters) {
+#'   parameters$rate * prey
+#' }
 #' log_prob <- log_probability(parameters, data, model, time_max = 1, n_replicates = 1000, alpha = 1)
 #' print(log_prob)
 #'
@@ -260,8 +258,7 @@ log_probability <- function(
     parameters,
     data,
     model,
-    time_max=1, n_replicates=1000, alpha=1) {
-
+    time_max = 1, n_replicates = 1000, alpha = 1) {
   # Validate inputs
   if (!is.data.frame(data) && !tibble::is_tibble(data)) {
     stop("`data` must be a dataframe or tibble.")
@@ -288,10 +285,9 @@ log_probability <- function(
 
   log_prob <- 0
   unique_prey_initial <- sort(unique(data$n_prey_initial))
-  for(i in seq_along(unique_prey_initial)) {
-
+  for (i in seq_along(unique_prey_initial)) {
     df_single_prey_initial <- data %>%
-      dplyr::filter(.data$n_prey_initial==unique_prey_initial[i])
+      dplyr::filter(.data$n_prey_initial == unique_prey_initial[i])
 
     log_prob_increment <- log_probability_single_prey_initial(
       parameters = parameters,
@@ -304,7 +300,6 @@ log_probability <- function(
     )
 
     log_prob <- log_prob + log_prob_increment
-
   }
 
   log_prob

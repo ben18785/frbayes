@@ -41,8 +41,10 @@ data frame for comparison.
 }
 \examples{
 # Example real data
-experimental_setup <- data.frame(n_prey_initial = c(10, 20, 30),
-n_replicates = c(100, 100, 100))
+experimental_setup <- data.frame(
+  n_prey_initial = c(10, 20, 30),
+  n_replicates = c(100, 100, 100)
+)
 time_max <- 10
 model <- model_stochastic_degradation()
 parameters <- list(rate = 0.1)

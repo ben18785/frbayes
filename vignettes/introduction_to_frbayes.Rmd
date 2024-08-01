@@ -43,7 +43,7 @@ where $a$ is a capture rate and $h$ is a handling time. Here, we assume the true
 We can simulate one such experiment, where we suppose the initial number of prey is 10 and the experiment takes place over a maximum of 5 time units. Here, we show how the number of prey eaten (10 - the number of prey remaining) increases with time. When the number of prey eaten reaches 10, the initial number of prey, there are no more prey to eat and the experiment ends.
 ```{r}
 # rogersII parameters
-true_parameters <- list(a=2, h=0.1)
+true_parameters <- list(a = 2, h = 0.1)
 
 # stochastic simulation
 df_single_replicate <- simulate_trajectory(
@@ -54,8 +54,8 @@ df_single_replicate <- simulate_trajectory(
 )
 
 # plot
-df_single_replicate %>% 
-  ggplot(aes(x=time, y=n_prey_eaten)) +
+df_single_replicate %>%
+  ggplot(aes(x = time, y = n_prey_eaten)) +
   geom_step() +
   scale_y_continuous(n.breaks = 10) +
   scale_x_continuous(limits = c(0, 5))
@@ -74,11 +74,13 @@ df_all_trajectories <- simulate_many_trajectories(
 )
 
 # plot
-df_all_trajectories %>% 
-  ggplot(aes(x=time,
-             y=n_prey_eaten,
-             group=as.factor(trajectory_id))) +
-  geom_step(alpha=0.5) +
+df_all_trajectories %>%
+  ggplot(aes(
+    x = time,
+    y = n_prey_eaten,
+    group = as.factor(trajectory_id)
+  )) +
+  geom_step(alpha = 0.5) +
   scale_y_continuous(n.breaks = 10)
 ```
 
@@ -88,13 +90,15 @@ In a typical experiment, there is a time chosen at which to observe the number o
 
 ```{r}
 # plot slice
-df_all_trajectories %>% 
-  ggplot(aes(x=time,
-             y=n_prey_eaten,
-             group=as.factor(trajectory_id))) +
-  geom_step(alpha=0.5) +
+df_all_trajectories %>%
+  ggplot(aes(
+    x = time,
+    y = n_prey_eaten,
+    group = as.factor(trajectory_id)
+  )) +
+  geom_step(alpha = 0.5) +
   scale_y_continuous(n.breaks = 10) +
-  geom_vline(xintercept = 1, linetype=2, colour="orange")
+  geom_vline(xintercept = 1, linetype = 2, colour = "orange")
 ```
 
 Usually, experiments then repeat this exercise but under a variety of experimental conditions, particularly across a range of initial prey counts.
@@ -110,15 +114,15 @@ experimental_setup <- data.frame(
 
 # generate synthetic data
 df <- simulate_study(
-  data=experimental_setup,
+  data = experimental_setup,
   time_max = 1,
   model = model_rogersII(),
   parameters = true_parameters
 )
 
 # plot data
-df %>% 
-  ggplot(aes(x=n_prey_initial, y=n_prey_eaten)) +
+df %>%
+  ggplot(aes(x = n_prey_initial, y = n_prey_eaten)) +
   geom_jitter(height = 0.3)
 ```
 
@@ -128,22 +132,25 @@ We now fit a model to these data using maximum likelihood estimation. To do so, 
 as <- seq(1, 4, 0.1)
 log_likelihood <- vector(length = length(as))
 
-for(i in seq_along(as)) {
+for (i in seq_along(as)) {
   parameters <- list(a = as[i], h = true_parameters$h)
   log_likelihood[i] <- log_probability(
     parameters = parameters,
     data = df,
     model = model_rogersII(),
-    n_replicates = 10000)
+    n_replicates = 10000
+  )
 }
 
 # plot
-tibble(a=as, log_likelihood=log_likelihood) %>% 
-  ggplot(aes(x=a, y=log_likelihood)) +
+tibble(a = as, log_likelihood = log_likelihood) %>%
+  ggplot(aes(x = a, y = log_likelihood)) +
   geom_line() +
-  geom_vline(xintercept = true_parameters$a,
-             linetype=2,
-             colour="orange")
+  geom_vline(
+    xintercept = true_parameters$a,
+    linetype = 2,
+    colour = "orange"
+  )
 ```
 
 Similarly so, for $h$.
@@ -151,47 +158,53 @@ Similarly so, for $h$.
 hs <- seq(0.01, 0.25, 0.01)
 log_likelihood <- vector(length = length(hs))
 
-for(i in seq_along(hs)) {
-  parameters <- list(a = true_parameters$a, h=hs[i])
+for (i in seq_along(hs)) {
+  parameters <- list(a = true_parameters$a, h = hs[i])
   log_likelihood[i] <- log_probability(
     parameters = parameters,
     data = df,
     model = model_rogersII(),
-    n_replicates = 1000)
+    n_replicates = 1000
+  )
 }
 
 # plot
-tibble(h=hs, log_likelihood=log_likelihood) %>% 
-  ggplot(aes(x=h, y=log_likelihood)) +
+tibble(h = hs, log_likelihood = log_likelihood) %>%
+  ggplot(aes(x = h, y = log_likelihood)) +
   geom_line() +
-  geom_vline(xintercept = true_parameters$h,
-             linetype=2,
-             colour="orange")
+  geom_vline(
+    xintercept = true_parameters$h,
+    linetype = 2,
+    colour = "orange"
+  )
 ```
 
 
 We can also look at the 2D likelihood surface. Here, we mark the true parameter set as a point.
 
 ```{r}
-parameter_combinations <- expand_grid(a=as, h=hs)
+parameter_combinations <- expand_grid(a = as, h = hs)
 parameter_combinations$z <- NA
-for(i in seq_along(parameter_combinations$a)) {
-  parameters <- list(a = parameter_combinations$a[i],
-                     h = parameter_combinations$h[i])
+for (i in seq_along(parameter_combinations$a)) {
+  parameters <- list(
+    a = parameter_combinations$a[i],
+    h = parameter_combinations$h[i]
+  )
   z <- log_probability(
     parameters = parameters,
     data = df,
     model = model_rogersII(),
-    n_replicates = 1000) # smaller sample
+    n_replicates = 1000
+  ) # smaller sample
   parameter_combinations$z[i] <- z
 }
 
 # plot
 ggplot(parameter_combinations, aes(x = a, y = h, fill = z)) +
   geom_raster() +
-  scale_fill_viridis_c() +  # Using continuous viridis color scale
+  scale_fill_viridis_c() + # Using continuous viridis color scale
   theme_minimal() +
-  geom_point(data=data.frame(h=true_parameters$h, a=true_parameters$a)) +
+  geom_point(data = data.frame(h = true_parameters$h, a = true_parameters$a)) +
   geom_contour(aes(z = z), color = "white")
 ```
 
@@ -200,28 +213,29 @@ We now perform optimisation to estimate a single maximum likelihood set of $(a,h
 ```{r}
 # set a function to minimise
 f_likelihood <- function(theta) {
-  parameters <- list(a=1.5, h=0.1) #  these are dummy values
+  parameters <- list(a = 1.5, h = 0.1) #  these are dummy values
   parameters[1] <- theta[1]
   parameters[2] <- theta[2]
   -log_probability( # minus sign needed as optim minimises
     parameters = parameters,
     data = df,
     model = model_rogersII(),
-    n_replicates = 10000)
+    n_replicates = 10000
+  )
 }
 
 # use R's standard optim
 fit <- optim(
   c(1.5, 0.1),
   f_likelihood,
-  lower=c(0.01, 0.01),
-  upper=c(5, 0.25)
+  lower = c(0.01, 0.01),
+  upper = c(5, 0.25)
 )
 
 # output pars
 a <- fit$par[1]
 h <- fit$par[2]
-mle_parameters <- list(a=a, h=h)
+mle_parameters <- list(a = a, h = h)
 print(paste0("a = ", a, ", h = ", h))
 ```
 
@@ -230,10 +244,10 @@ We then mark the MLE values as a cross on the 2D likelihood surface.
 # overlay on 2D plot
 ggplot(parameter_combinations, aes(x = a, y = h, fill = z)) +
   geom_raster() +
-  scale_fill_viridis_c() +  # Using continuous viridis color scale
+  scale_fill_viridis_c() + # Using continuous viridis color scale
   theme_minimal() +
-  geom_point(data=data.frame(h=true_parameters$h, a=true_parameters$a)) +
-  geom_point(data=data.frame(h=h, a=a), shape=4, size=4) +
+  geom_point(data = data.frame(h = true_parameters$h, a = true_parameters$a)) +
+  geom_point(data = data.frame(h = h, a = a), shape = 4, size = 4) +
   geom_contour(aes(z = z), color = "white")
 ```
 
@@ -247,7 +261,7 @@ experimental_setup <- data.frame(
 
 # generate synthetic data at max likelihood estimates
 df_sim <- simulate_study(
-  data=experimental_setup,
+  data = experimental_setup,
   time_max = 1,
   model = model_rogersII(),
   parameters = mle_parameters
@@ -255,9 +269,9 @@ df_sim <- simulate_study(
 
 # plot
 df %>%
-  ggplot(aes(x=as.factor(n_prey_initial), y=n_prey_eaten)) +
-  geom_violin(data=df_sim) +
-  geom_jitter(height = 0.3, alpha=0.8) +
+  ggplot(aes(x = as.factor(n_prey_initial), y = n_prey_eaten)) +
+  geom_violin(data = df_sim) +
+  geom_jitter(height = 0.3, alpha = 0.8) +
   xlab("n_prey_initial")
 ```
 
@@ -269,19 +283,19 @@ Here, we plot these for each value of `n_prey_initial` across 100 bootstrapped s
 # generate ecdfs
 n_bootstraps <- 100
 df_ecdfs_both <- create_bootstrapped_ecdf_real_simulated(
-    n_bootstraps = n_bootstraps,
-    data = df,
-    time_max = 1,
-    model = model_rogersII(),
-    mle_parameters = mle_parameters
+  n_bootstraps = n_bootstraps,
+  data = df,
+  time_max = 1,
+  model = model_rogersII(),
+  mle_parameters = mle_parameters
 )
 
 # plot
-df_ecdfs_both %>% 
-  ggplot(aes(x=ecdf_real, y=ecdf_sim, group=as.factor(bootstrap_id))) +
-  geom_line(alpha=0.5) +
+df_ecdfs_both %>%
+  ggplot(aes(x = ecdf_real, y = ecdf_sim, group = as.factor(bootstrap_id))) +
+  geom_line(alpha = 0.5) +
   facet_wrap(~n_prey_initial) +
-  geom_abline(linetype=2, colour="orange")
+  geom_abline(linetype = 2, colour = "orange")
 ```
 
 As a sanity check, we repeat these checks using the true parameter values. This shows a slightly more reasonable fit.
@@ -289,18 +303,18 @@ As a sanity check, we repeat these checks using the true parameter values. This 
 # generate ecdfs
 n_bootstraps <- 100
 df_ecdfs_both <- create_bootstrapped_ecdf_real_simulated(
-    n_bootstraps = n_bootstraps,
-    data = df,
-    time_max = 1,
-    model = model_rogersII(),
-    mle_parameters = true_parameters
+  n_bootstraps = n_bootstraps,
+  data = df,
+  time_max = 1,
+  model = model_rogersII(),
+  mle_parameters = true_parameters
 )
 
 # plot
-df_ecdfs_both %>% 
-  ggplot(aes(x=ecdf_real, y=ecdf_sim, group=as.factor(bootstrap_id))) +
-  geom_line(alpha=0.5) +
+df_ecdfs_both %>%
+  ggplot(aes(x = ecdf_real, y = ecdf_sim, group = as.factor(bootstrap_id))) +
+  geom_line(alpha = 0.5) +
   facet_wrap(~n_prey_initial) +
-  geom_abline(linetype=2, colour="orange")
+  geom_abline(linetype = 2, colour = "orange")
 ```
 

@@ -12,7 +12,6 @@
 #' @return A data frame with numbers of prey remaining (and eaten) by time.
 #' @export
 simulate_trajectory <- function(n_prey_initial, time_max, model, parameters) {
-
   # Input validation
   if (!is.numeric(n_prey_initial) || length(n_prey_initial) != 1 || n_prey_initial < 0 || n_prey_initial != as.integer(n_prey_initial)) {
     stop("Parameter 'n_prey_initial' must be a non-negative integer.")
@@ -35,8 +34,7 @@ simulate_trajectory <- function(n_prey_initial, time_max, model, parameters) {
   event_times <- c(0)
   prey_remaining <- c(n_prey_initial)
 
-  while(t < time_max & n_prey_remaining > 0) {
-
+  while (t < time_max & n_prey_remaining > 0) {
     r <- stats::runif(1)
     propensity <- model(n_prey_remaining, parameters)
 
@@ -54,10 +52,10 @@ simulate_trajectory <- function(n_prey_initial, time_max, model, parameters) {
   }
 
   dplyr::tibble(
-    time=event_times,
-    n_prey_remaining=prey_remaining
+    time = event_times,
+    n_prey_remaining = prey_remaining
   ) %>%
-    dplyr::mutate(n_prey_eaten=n_prey_initial-n_prey_remaining)
+    dplyr::mutate(n_prey_eaten = n_prey_initial - n_prey_remaining)
 }
 
 #' Simulate Multiple Runs of a Prey-Predator Model
@@ -80,8 +78,7 @@ simulate_many_trajectories <- function(
     n_prey_initial,
     time_max,
     model,
-    parameters){
-
+    parameters) {
   # Input validation
   if (!is.numeric(n_trajectories) || length(n_trajectories) != 1 || n_trajectories <= 0 || n_trajectories != as.integer(n_trajectories)) {
     stop("Parameter 'n_trajectories' must be a positive integer.")
@@ -103,21 +100,21 @@ simulate_many_trajectories <- function(
     stop("Parameter 'parameters' must be a non-null list of named parameters.")
   }
 
-  for(i in 1:n_trajectories) {
-
+  for (i in 1:n_trajectories) {
     df_single_replicate <- simulate_trajectory(
       n_prey_initial = n_prey_initial,
       time_max = time_max,
       model = model,
       parameters = parameters
     ) %>%
-      dplyr::mutate(trajectory_id=i)
+      dplyr::mutate(trajectory_id = i)
 
-    if(i == 1)
+    if (i == 1) {
       df_all_trajectories <- df_single_replicate
-    else
+    } else {
       df_all_trajectories <- df_all_trajectories %>%
         dplyr::bind_rows(df_single_replicate)
+    }
   }
 
   df_all_trajectories
@@ -153,7 +150,6 @@ simulate_many_trajectories <- function(
 #'
 #' @export
 simulate <- function(n_replicates, n_prey_initial, time_max, model, parameters) {
-
   if (!is.function(model)) {
     stop("model must be a function")
   }
@@ -186,8 +182,9 @@ simulate <- function(n_replicates, n_prey_initial, time_max, model, parameters) 
 
   # Calculate cumulative sums once for all replicates
   cumsum_matrix <- apply(tau_matrix, 2, cumsum)
-  if(is.null(dim(cumsum_matrix)))
+  if (is.null(dim(cumsum_matrix))) {
     cumsum_matrix <- matrix(cumsum_matrix, nrow = 1)
+  }
 
   # Find the number of prey remaining
   prey_remaining <- apply(cumsum_matrix, 2, function(times) {
@@ -240,7 +237,6 @@ simulate <- function(n_replicates, n_prey_initial, time_max, model, parameters) 
 #' result <- simulate_study(data, time_max, model, parameters)
 #' @export
 simulate_study <- function(data, time_max, model, parameters) {
-
   if (!is.data.frame(data) || !("n_prey_initial" %in% colnames(data)) || !("n_replicates" %in% colnames(data))) {
     stop("`data` must be a dataframe containing columns 'n_prey_initial' and 'n_replicates'.")
   }
@@ -259,23 +255,24 @@ simulate_study <- function(data, time_max, model, parameters) {
 
 
   unique_prey_initial <- sort(unique(data$n_prey_initial))
-  if(length(unique_prey_initial) != nrow(data))
+  if (length(unique_prey_initial) != nrow(data)) {
     stop("Dataframe should have one row per n_prey_initial.")
+  }
 
-  for(i in seq_along(unique_prey_initial)) {
-
+  for (i in seq_along(unique_prey_initial)) {
     n_prey_initial <- unique_prey_initial[i]
     tmp <- data %>%
-      dplyr::filter(.data$n_prey_initial==n_prey_initial)
+      dplyr::filter(.data$n_prey_initial == n_prey_initial)
     n_replicates <- tmp$n_replicates[1]
 
     df <- simulate(n_replicates, n_prey_initial, time_max, model, parameters)
 
-    if(i == 1)
+    if (i == 1) {
       df_stacked <- df
-    else
+    } else {
       df_stacked <- df_stacked %>%
-      dplyr::bind_rows(df)
+        dplyr::bind_rows(df)
+    }
   }
 
   df_stacked

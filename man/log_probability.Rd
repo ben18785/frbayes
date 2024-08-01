@@ -58,9 +58,13 @@ prey counts.
 \examples{
 # Example usage:
 parameters <- list(rate = 0.1)
-data <- tibble::tibble(n_prey_initial = c(10, 20, 30),
-                       n_prey_remaining = c(5, 10, 15))
-model <- function(prey, parameters) { parameters$rate * prey }
+data <- tibble::tibble(
+  n_prey_initial = c(10, 20, 30),
+  n_prey_remaining = c(5, 10, 15)
+)
+model <- function(prey, parameters) {
+  parameters$rate * prey
+}
 log_prob <- log_probability(parameters, data, model, time_max = 1, n_replicates = 1000, alpha = 1)
 print(log_prob)
 

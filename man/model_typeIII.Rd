@@ -32,6 +32,6 @@ where \code{b} is the maximum rate of consumption and \code{h} is the handling t
 \examples{
 model <- model_typeIII()
 parameters <- list(b = 0.3, h = 0.7)
-model(10, parameters)  # Computes the rate of prey consumption for 10 prey
+model(10, parameters) # Computes the rate of prey consumption for 10 prey
 
 }

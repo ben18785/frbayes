@@ -7,7 +7,7 @@ test_that("create_approx_counts handles basic input correctly", {
 
   expected <- tibble(
     n_prey_remaining = 0:4,
-    n = c(0, 1, 2, 1, 1)  # Expected counts for each value
+    n = c(0, 1, 2, 1, 1) # Expected counts for each value
   )
 
   expect_equal(result, expected)
@@ -22,7 +22,7 @@ test_that("create_approx_counts handles empty input", {
 
   expected <- tibble(
     n_prey_remaining = 0:3,
-    n = c(0, 0, 0, 0)  # All counts should be zero
+    n = c(0, 0, 0, 0) # All counts should be zero
   )
 
   expect_equal(result, expected)
@@ -37,7 +37,7 @@ test_that("create_approx_counts handles edge cases", {
 
   expected <- tibble(
     n_prey_remaining = 0:5,
-    n = c(1, 3, 2, 4, 0, 0)  # Counts for each value, including those not in the original data
+    n = c(1, 3, 2, 4, 0, 0) # Counts for each value, including those not in the original data
   )
 
   expect_equal(result, expected)
@@ -177,40 +177,56 @@ test_data <- tibble(
 )
 
 test_that("log_probability handles invalid data formats", {
-  expect_error(log_probability(parameters = list(), data = list(), model = NULL),
-               "`data` must be a dataframe or tibble.")
+  expect_error(
+    log_probability(parameters = list(), data = list(), model = NULL),
+    "`data` must be a dataframe or tibble."
+  )
 
-  expect_error(log_probability(parameters = list(), data = tibble(a = 1:5), model = NULL),
-               "`data` must contain the following columns: n_prey_initial, n_prey_remaining")
+  expect_error(
+    log_probability(parameters = list(), data = tibble(a = 1:5), model = NULL),
+    "`data` must contain the following columns: n_prey_initial, n_prey_remaining"
+  )
 })
 
 test_that("log_probability handles invalid time_max values", {
-  expect_error(log_probability(parameters = list(), data = test_data, model = NULL, time_max = -1),
-               "`time_max` must be a positive number.")
+  expect_error(
+    log_probability(parameters = list(), data = test_data, model = NULL, time_max = -1),
+    "`time_max` must be a positive number."
+  )
 
-  expect_error(log_probability(parameters = list(), data = test_data, model = NULL, time_max = "one"),
-               "`time_max` must be a positive number.")
+  expect_error(
+    log_probability(parameters = list(), data = test_data, model = NULL, time_max = "one"),
+    "`time_max` must be a positive number."
+  )
 })
 
 test_that("log_probability handles invalid n_replicates values", {
-  expect_error(log_probability(parameters = list(), data = test_data, model = NULL, n_replicates = 0),
-               "`n_replicates` must be a positive integer.")
+  expect_error(
+    log_probability(parameters = list(), data = test_data, model = NULL, n_replicates = 0),
+    "`n_replicates` must be a positive integer."
+  )
 
-  expect_error(log_probability(parameters = list(), data = test_data, model = NULL, n_replicates = 1.5),
-               "`n_replicates` must be a positive integer.")
+  expect_error(
+    log_probability(parameters = list(), data = test_data, model = NULL, n_replicates = 1.5),
+    "`n_replicates` must be a positive integer."
+  )
 })
 
 test_that("log_probability handles invalid alpha values", {
-  expect_error(log_probability(parameters = list(), data = test_data, model = NULL, alpha = -1),
-               "`alpha` must be a positive number.")
+  expect_error(
+    log_probability(parameters = list(), data = test_data, model = NULL, alpha = -1),
+    "`alpha` must be a positive number."
+  )
 
-  expect_error(log_probability(parameters = list(), data = test_data, model = NULL, alpha = "one"),
-               "`alpha` must be a positive number.")
+  expect_error(
+    log_probability(parameters = list(), data = test_data, model = NULL, alpha = "one"),
+    "`alpha` must be a positive number."
+  )
 })
 
 test_that("log_probability returns the sum of log_probabilities from log_probability_single_prey_initial", {
   # Define parameters for the test
-  parameters <- list(rate=0.1)
+  parameters <- list(rate = 0.1)
   model <- model_stochastic_degradation()
   time_max <- 1
   n_replicates <- 10000
@@ -250,4 +266,3 @@ test_that("log_probability returns the sum of log_probabilities from log_probabi
   # Check if the result matches the expected log probability
   expect_equal(result, expected_log_prob, tolerance = 0.5)
 })
-

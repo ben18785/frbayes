@@ -44,7 +44,7 @@ where $\text{rate}>0$ dictates the speed at which prey are eaten. This type of m
 To illustrate how this model works, we can simulate from it in `frbayes` which, under the hood, uses the [Gillespie algorithm](https://arxiv.org/abs/0704.1908). We assume an arbitrary parameter value: $\text{rate}=0.1$ and perform a simulation where we suppose there are initially 10 prey.
 ```{r}
 # stochastic degradation parameters
-true_parameters <- list(rate=0.2)
+true_parameters <- list(rate = 0.2)
 
 # stochastic simulation
 df_single_replicate <- simulate_trajectory(
@@ -55,8 +55,8 @@ df_single_replicate <- simulate_trajectory(
 )
 
 # plot
-df_single_replicate %>% 
-  ggplot(aes(x=time, y=n_prey_eaten)) +
+df_single_replicate %>%
+  ggplot(aes(x = time, y = n_prey_eaten)) +
   geom_step() +
   scale_y_continuous(n.breaks = 10) +
   scale_x_continuous(limits = c(0, 20))
@@ -66,19 +66,21 @@ Because this model is stochastic, each time it is run, a different trajectory ca
 ```{r}
 # perform simulations
 df_all_trajectories <- simulate_many_trajectories(
-  n_trajectories=100,
-  n_prey_initial=10,
-  time_max=10,
-  model=model_stochastic_degradation(),
-  parameters=true_parameters
+  n_trajectories = 100,
+  n_prey_initial = 10,
+  time_max = 10,
+  model = model_stochastic_degradation(),
+  parameters = true_parameters
 )
 
 # plot
-df_all_trajectories %>% 
-  ggplot(aes(x=time,
-             y=n_prey_eaten,
-             group=as.factor(trajectory_id))) +
-  geom_step(alpha=0.5) +
+df_all_trajectories %>%
+  ggplot(aes(
+    x = time,
+    y = n_prey_eaten,
+    group = as.factor(trajectory_id)
+  )) +
+  geom_step(alpha = 0.5) +
   scale_y_continuous(n.breaks = 10) +
   scale_x_continuous(limits = c(0, 15))
 ```
@@ -102,9 +104,9 @@ $$
 We can plot this distribution at $\text{time}=5$ at $\text{rate}=0.2$ and the number of initial prey, $n=10$.
 ```{r}
 analytical_pmf <- function(n_prey_eaten, n_prey_initial, t, rate) {
-    exp(-rate * (n_prey_initial - n_prey_eaten) * t) * (
-      choose(n_prey_initial, n_prey_initial - n_prey_eaten) *
-        (1 - exp(-rate * t))^n_prey_eaten)
+  exp(-rate * (n_prey_initial - n_prey_eaten) * t) * (
+    choose(n_prey_initial, n_prey_initial - n_prey_eaten) *
+      (1 - exp(-rate * t))^n_prey_eaten)
 }
 
 # generate pmf values
@@ -113,17 +115,19 @@ n_prey_eaten <- 0:10 # all possible values
 obs_time <- 5
 pmf_values <- analytical_pmf(
   n_prey_eaten, n_prey_initial,
-  obs_time, rate=true_parameters$rate)
+  obs_time,
+  rate = true_parameters$rate
+)
 
 # plot
 analytical_pmf_df <- dplyr::tibble(
   n_prey_eaten,
-  pmf=pmf_values
-) %>% 
-  mutate(type="analytical")
+  pmf = pmf_values
+) %>%
+  mutate(type = "analytical")
 
-analytical_pmf_df %>% 
-  ggplot(aes(x=n_prey_eaten, y=pmf)) +
+analytical_pmf_df %>%
+  ggplot(aes(x = n_prey_eaten, y = pmf)) +
   geom_col() +
   scale_x_continuous(n.breaks = 10)
 ```
@@ -132,29 +136,32 @@ We can compare this distribution with model simulations by a slice through these
 
 ```{r}
 # plot
-df_all_trajectories %>% 
-  ggplot(aes(x=time,
-             y=n_prey_eaten,
-             group=as.factor(trajectory_id))) +
-  geom_step(alpha=0.5) +
+df_all_trajectories %>%
+  ggplot(aes(
+    x = time,
+    y = n_prey_eaten,
+    group = as.factor(trajectory_id)
+  )) +
+  geom_step(alpha = 0.5) +
   scale_y_continuous(n.breaks = 10) +
   scale_x_continuous(limits = c(0, 15)) +
-  geom_vline(xintercept = 5, linetype=2, colour="orange")
+  geom_vline(xintercept = 5, linetype = 2, colour = "orange")
 ```
 
 Looking at the empirical histogram from this slide, the typical ranges implied by the above analytical distribution, where mostly $3\leq n_e \leq 9$, are supported by the simulations.
 
 ```{r}
 # plot histogram
-df_all_trajectories %>% 
-  dplyr::filter(time <= 5) %>% 
-  group_by(trajectory_id) %>% 
-  summarise(n_prey_eaten=last(n_prey_eaten)) %>% 
-  ggplot(aes(x=n_prey_eaten)) +
+df_all_trajectories %>%
+  dplyr::filter(time <= 5) %>%
+  group_by(trajectory_id) %>%
+  summarise(n_prey_eaten = last(n_prey_eaten)) %>%
+  ggplot(aes(x = n_prey_eaten)) +
   geom_histogram() +
   scale_x_continuous(
     n.breaks = 10,
-    limits=c(0, 10))
+    limits = c(0, 10)
+  )
 ```
 
 
@@ -166,31 +173,30 @@ When we perform only 100 trajectories, the empirical distribution is only a roug
 create_empirical_pmf <- function(
     df_all_trajectories,
     time_obs) {
-
   # all possible numbers of prey remaining
   df_all <- dplyr::tibble(n_prey_eaten = 0:n_prey_initial)
-  
+
   # empirical distribution
-  df_all_trajectories %>% 
-    dplyr::filter(time <= time_obs) %>% 
-    group_by(trajectory_id) %>% 
-    summarise(n_prey_eaten=last(n_prey_eaten)) %>% 
-    group_by(n_prey_eaten) %>% 
-    count() %>% 
-    right_join(df_all, by="n_prey_eaten") %>% 
-    tidyr::replace_na(list(n = 0)) %>% 
-    arrange(n_prey_eaten) %>% 
-    ungroup() %>% 
-    mutate(pmf=n/sum(n)) %>% 
+  df_all_trajectories %>%
+    dplyr::filter(time <= time_obs) %>%
+    group_by(trajectory_id) %>%
+    summarise(n_prey_eaten = last(n_prey_eaten)) %>%
+    group_by(n_prey_eaten) %>%
+    count() %>%
+    right_join(df_all, by = "n_prey_eaten") %>%
+    tidyr::replace_na(list(n = 0)) %>%
+    arrange(n_prey_eaten) %>%
+    ungroup() %>%
+    mutate(pmf = n / sum(n)) %>%
     select(-n)
 }
 
 # plot
-create_empirical_pmf(df_all_trajectories, 5) %>% 
-  mutate(type="empirical") %>% 
-  bind_rows(analytical_pmf_df) %>% 
-  ggplot(aes(x=n_prey_eaten, y=pmf)) +
-  geom_col(aes(fill=type), position = position_dodge2()) +
+create_empirical_pmf(df_all_trajectories, 5) %>%
+  mutate(type = "empirical") %>%
+  bind_rows(analytical_pmf_df) %>%
+  ggplot(aes(x = n_prey_eaten, y = pmf)) +
+  geom_col(aes(fill = type), position = position_dodge2()) +
   scale_x_continuous(n.breaks = 10) +
   scale_fill_brewer(palette = "Dark2")
 ```
@@ -199,19 +205,19 @@ But if we increase the number of simulations, we generally get a better approxim
 
 ```{r}
 df_all_trajectories <- simulate_many_trajectories(
-  n_trajectories=10000,
-  n_prey_initial=10,
-  time_max=10,
-  model=model_stochastic_degradation(),
-  parameters=true_parameters
+  n_trajectories = 10000,
+  n_prey_initial = 10,
+  time_max = 10,
+  model = model_stochastic_degradation(),
+  parameters = true_parameters
 )
 
 # plot
-create_empirical_pmf(df_all_trajectories, 5) %>% 
-  mutate(type="empirical") %>% 
-  bind_rows(analytical_pmf_df) %>% 
-  ggplot(aes(x=n_prey_eaten, y=pmf)) +
-  geom_col(aes(fill=type), position = position_dodge2()) +
+create_empirical_pmf(df_all_trajectories, 5) %>%
+  mutate(type = "empirical") %>%
+  bind_rows(analytical_pmf_df) %>%
+  ggplot(aes(x = n_prey_eaten, y = pmf)) +
+  geom_col(aes(fill = type), position = position_dodge2()) +
   scale_x_continuous(n.breaks = 10) +
   scale_fill_brewer(palette = "Dark2")
 ```

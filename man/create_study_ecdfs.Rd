@@ -7,18 +7,19 @@
 create_study_ecdfs(data)
 }
 \arguments{
-\item{data}{A data frame containing the experimental data, which should include columns
-\code{n_prey_initial} and \code{n_prey_eaten}.}
+\item{data}{A data frame containing the experimental data, which should
+include columns \code{n_prey_initial} and \code{n_prey_eaten}.}
 }
 \value{
-A data frame with columns \code{n_prey_eaten}, \code{ecdf}, and \code{n_prey_initial}.
+A data frame with columns \code{n_prey_eaten}, \code{ecdf}, and
+\code{n_prey_initial}.
 }
 \description{
-This function computes the empirical cumulative distribution functions (ECDFs)
-for the number of prey eaten, grouped by the initial number of prey.
+This function computes the empirical cumulative distribution functions
+(ECDFs) for the number of prey eaten, grouped by the initial number of prey.
 }
 \details{
-The function calculates the ECDF of the number of prey eaten for each unique value
-of \code{n_prey_initial} in the input data. The ECDF is computed over a range of possible
-values for the number of prey eaten, from 0 to the initial number of prey.
+The function calculates the ECDF of the number of prey eaten for each unique
+value of \code{n_prey_initial} in the input data. The ECDF is computed over
+a range of possible values for the number of prey eaten, from 0 to the initial number of prey.
 }

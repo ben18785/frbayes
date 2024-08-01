@@ -17,7 +17,7 @@
 #' @examples
 #' model <- model_stochastic_degradation()
 #' parameters <- list(rate = 0.1)
-#' model(10, parameters)  # Returns 1.0
+#' model(10, parameters) # Returns 1.0
 #'
 #' @export
 model_stochastic_degradation <- function() {
@@ -54,7 +54,7 @@ model_stochastic_degradation <- function() {
 #' @examples
 #' model <- model_rogersII()
 #' parameters <- list(a = 0.2, h = 0.5)
-#' model(10, parameters)  # Computes the rate of prey consumption for 10 prey
+#' model(10, parameters) # Computes the rate of prey consumption for 10 prey
 #'
 #' @export
 model_rogersII <- function() {
@@ -92,7 +92,7 @@ model_rogersII <- function() {
 #' @examples
 #' model <- model_typeIII()
 #' parameters <- list(b = 0.3, h = 0.7)
-#' model(10, parameters)  # Computes the rate of prey consumption for 10 prey
+#' model(10, parameters) # Computes the rate of prey consumption for 10 prey
 #'
 #' @export
 model_typeIII <- function() {
@@ -129,7 +129,7 @@ model_typeIII <- function() {
 #' @examples
 #' model <- model_generalised_holling()
 #' parameters <- list(b = 0.5, h = 0.2, q = 1)
-#' model(10, parameters)  # Computes the rate of prey consumption for 10 prey
+#' model(10, parameters) # Computes the rate of prey consumption for 10 prey
 #'
 #' @export
 model_generalised_holling <- function() {

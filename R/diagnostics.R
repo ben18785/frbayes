@@ -1,17 +1,22 @@
-
 #' Create Bootstrapped Samples
 #'
-#' This function generates bootstrapped samples from a given dataset by simulating
-#' a study multiple times using a specified model and parameters.
+#' This function generates bootstrapped samples from a given dataset by
+#' simulating a study multiple times using a specified model and parameters.
 #'
-#' @param n_bootstraps An integer representing the number of bootstrap samples to generate.
-#' @param data A data frame containing the experimental data, which should include a column `n_prey_initial`.
-#' @param time_max A numeric value indicating the maximum time for the simulation.
-#' @param model A function that calculates the propensity given the current number of prey and parameters.
-#' @param mle_parameters A list of maximum likelihood estimated parameters required by the model function.
+#' @param n_bootstraps An integer representing the number of bootstrap samples
+#' to generate.
+#' @param data A data frame containing the experimental data, which should
+#' include a column `n_prey_initial`.
+#' @param time_max A numeric value indicating the maximum time for the
+#' simulation.
+#' @param model A function that calculates the propensity given the current
+#' number of prey and parameters.
+#' @param mle_parameters A list of maximum likelihood estimated parameters
+#' required by the model function.
 #'
-#' @return A data frame containing the bootstrapped samples. The data frame includes columns
-#'   `n_prey_initial`, `n_replicates`, and `bootstrap_id` for each bootstrap sample.
+#' @return A data frame containing the bootstrapped samples. The data frame
+#' includes columns `n_prey_initial`, `n_replicates`, and `bootstrap_id` for
+#' each bootstrap sample.
 #'
 #' @import dplyr
 create_bootstrapped_samples <- function(
@@ -20,30 +25,28 @@ create_bootstrapped_samples <- function(
     time_max,
     model,
     mle_parameters) {
-
   experimental_setup <- data %>%
     group_by(.data$n_prey_initial) %>%
     count() %>%
-    dplyr::rename(n_replicates=.data$n)
+    dplyr::rename(n_replicates = .data$n)
 
-  for(i in seq(1, n_bootstraps, 1)) {
-
+  for (i in seq(1, n_bootstraps, 1)) {
     df_sim <- simulate_study(
-      data=experimental_setup,
+      data = experimental_setup,
       time_max = time_max,
       model = model,
       parameters = mle_parameters
     ) %>%
       dplyr::mutate(
-        bootstrap_id=i
+        bootstrap_id = i
       )
 
-    if(i == 1)
+    if (i == 1) {
       df_bootstrap_samples <- df_sim
-    else
+    } else {
       df_bootstrap_samples <- df_bootstrap_samples %>%
         dplyr::bind_rows(df_sim)
-
+    }
   }
 
   df_bootstrap_samples
@@ -51,29 +54,28 @@ create_bootstrapped_samples <- function(
 
 #' Create Empirical CDFs for Prey Eaten Data
 #'
-#' This function computes the empirical cumulative distribution functions (ECDFs)
-#' for the number of prey eaten, grouped by the initial number of prey.
+#' This function computes the empirical cumulative distribution functions
+#' (ECDFs) for the number of prey eaten, grouped by the initial number of prey.
 #'
-#' @param data A data frame containing the experimental data, which should include columns
-#'   \code{n_prey_initial} and \code{n_prey_eaten}.
+#' @param data A data frame containing the experimental data, which should
+#' include columns \code{n_prey_initial} and \code{n_prey_eaten}.
 #'
-#' @return A data frame with columns \code{n_prey_eaten}, \code{ecdf}, and \code{n_prey_initial}.
+#' @return A data frame with columns \code{n_prey_eaten}, \code{ecdf}, and
+#' \code{n_prey_initial}.
 #'
 #' @details
-#' The function calculates the ECDF of the number of prey eaten for each unique value
-#' of \code{n_prey_initial} in the input data. The ECDF is computed over a range of possible
-#' values for the number of prey eaten, from 0 to the initial number of prey.
+#' The function calculates the ECDF of the number of prey eaten for each unique
+#' value of \code{n_prey_initial} in the input data. The ECDF is computed over
+#' a range of possible values for the number of prey eaten, from 0 to the initial number of prey.
 #' @import dplyr
 create_study_ecdfs <- function(data) {
-
   prey_initial <- sort(unique(data$n_prey_initial))
 
-  for(i in seq_along(prey_initial)) {
-
+  for (i in seq_along(prey_initial)) {
     prey_initial_tmp <- prey_initial[i]
 
     df_short <- data %>%
-      dplyr::filter(.data$n_prey_initial==prey_initial_tmp)
+      dplyr::filter(.data$n_prey_initial == prey_initial_tmp)
 
     # calculate ecdf series
     f_ecdf <- stats::ecdf(df_short$n_prey_eaten)
@@ -81,15 +83,16 @@ create_study_ecdfs <- function(data) {
     series_ecdf <- f_ecdf(prey_eaten_range)
 
     df_tmp <- dplyr::tibble(
-      n_prey_eaten=prey_eaten_range,
-      ecdf=series_ecdf,
-      n_prey_initial=prey_initial_tmp
+      n_prey_eaten = prey_eaten_range,
+      ecdf = series_ecdf,
+      n_prey_initial = prey_initial_tmp
     )
 
-    if(i == 1)
+    if (i == 1) {
       df_ecdfs <- df_tmp
-    else
+    } else {
       df_ecdfs <- df_ecdfs %>% dplyr::bind_rows(df_tmp)
+    }
   }
 
   df_ecdfs
@@ -113,25 +116,23 @@ create_study_ecdfs <- function(data) {
 #' bootstrap replicate separately, and the results are combined into a single data frame.
 #' @import dplyr
 create_bootstrapped_ecdf_simulated <- function(
-    df_bootstrap_samples
-) {
-
+    df_bootstrap_samples) {
   n_bootstraps <- max(df_bootstrap_samples$bootstrap_id)
-  for(i in 1:n_bootstraps) {
-
+  for (i in 1:n_bootstraps) {
     df_bootstrap_samples_tmp <- df_bootstrap_samples %>%
-      dplyr::filter(.data$bootstrap_id==i)
+      dplyr::filter(.data$bootstrap_id == i)
 
     df_ecdfs <- create_study_ecdfs(df_bootstrap_samples_tmp) %>%
-      dplyr::mutate(bootstrap_id=i)
+      dplyr::mutate(bootstrap_id = i)
 
-    if(i == 1)
+    if (i == 1) {
       df_ecdfs_sim <- df_ecdfs
-    else
+    } else {
       df_ecdfs_sim <- df_ecdfs_sim %>% dplyr::bind_rows(df_ecdfs)
+    }
   }
   df_ecdfs_sim <- df_ecdfs_sim %>%
-    dplyr::rename(ecdf_sim=.data$ecdf)
+    dplyr::rename(ecdf_sim = .data$ecdf)
 
   df_ecdfs_sim
 }
@@ -161,8 +162,10 @@ create_bootstrapped_ecdf_simulated <- function(
 #'
 #' @examples
 #' # Example real data
-#' experimental_setup <- data.frame(n_prey_initial = c(10, 20, 30),
-#' n_replicates = c(100, 100, 100))
+#' experimental_setup <- data.frame(
+#'   n_prey_initial = c(10, 20, 30),
+#'   n_replicates = c(100, 100, 100)
+#' )
 #' time_max <- 10
 #' model <- model_stochastic_degradation()
 #' parameters <- list(rate = 0.1)
@@ -188,7 +191,6 @@ create_bootstrapped_ecdf_real_simulated <- function(
     time_max,
     model,
     mle_parameters) {
-
   # Input validation
   if (!is.numeric(n_bootstraps) || length(n_bootstraps) != 1 || n_bootstraps <= 0 || n_bootstraps != as.integer(n_bootstraps)) {
     stop("Parameter 'n_bootstraps' must be a positive integer.")
@@ -225,10 +227,10 @@ create_bootstrapped_ecdf_real_simulated <- function(
   df_ecdfs_sim <- create_bootstrapped_ecdf_simulated(df_bootstrap_samples)
 
   df_ecdfs_real <- create_study_ecdfs(data) %>%
-    dplyr::rename(ecdf_real=.data$ecdf)
+    dplyr::rename(ecdf_real = .data$ecdf)
 
   df_ecdfs_both <- df_ecdfs_sim %>%
-    dplyr::left_join(df_ecdfs_real, by=c("n_prey_eaten", "n_prey_initial"))
+    dplyr::left_join(df_ecdfs_real, by = c("n_prey_eaten", "n_prey_initial"))
 
   df_ecdfs_both
 }

@@ -13,21 +13,27 @@ create_bootstrapped_samples(
 )
 }
 \arguments{
-\item{n_bootstraps}{An integer representing the number of bootstrap samples to generate.}
+\item{n_bootstraps}{An integer representing the number of bootstrap samples
+to generate.}
 
-\item{data}{A data frame containing the experimental data, which should include a column \code{n_prey_initial}.}
+\item{data}{A data frame containing the experimental data, which should
+include a column \code{n_prey_initial}.}
 
-\item{time_max}{A numeric value indicating the maximum time for the simulation.}
+\item{time_max}{A numeric value indicating the maximum time for the
+simulation.}
 
-\item{model}{A function that calculates the propensity given the current number of prey and parameters.}
+\item{model}{A function that calculates the propensity given the current
+number of prey and parameters.}
 
-\item{mle_parameters}{A list of maximum likelihood estimated parameters required by the model function.}
+\item{mle_parameters}{A list of maximum likelihood estimated parameters
+required by the model function.}
 }
 \value{
-A data frame containing the bootstrapped samples. The data frame includes columns
-\code{n_prey_initial}, \code{n_replicates}, and \code{bootstrap_id} for each bootstrap sample.
+A data frame containing the bootstrapped samples. The data frame
+includes columns \code{n_prey_initial}, \code{n_replicates}, and \code{bootstrap_id} for
+each bootstrap sample.
 }
 \description{
-This function generates bootstrapped samples from a given dataset by simulating
-a study multiple times using a specified model and parameters.
+This function generates bootstrapped samples from a given dataset by
+simulating a study multiple times using a specified model and parameters.
 }

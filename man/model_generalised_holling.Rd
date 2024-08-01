@@ -33,6 +33,6 @@ modifies the type of functional response.
 \examples{
 model <- model_generalised_holling()
 parameters <- list(b = 0.5, h = 0.2, q = 1)
-model(10, parameters)  # Computes the rate of prey consumption for 10 prey
+model(10, parameters) # Computes the rate of prey consumption for 10 prey
 
 }
