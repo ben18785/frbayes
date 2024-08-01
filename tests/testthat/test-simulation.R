@@ -159,6 +159,37 @@ test_that("simulate approximates correct analytical pmf with constant rates", {
 
 })
 
+test_that("simulate behaves similarly to slower but simpler simulation function", {
+
+  params <- list(b = 1.5, h = 0.1, q=1)
+  n_replicates <- 100000
+  n_prey_initial <- 10
+  time_max <- 1
+  set.seed(123)
+  model <- model_generalised_holling()
+  result <- simulate(n_replicates, n_prey_initial, time_max, model, params)
+
+  df_fast <- result %>%
+    dplyr::group_by(n_prey_remaining) %>%
+    dplyr::count() %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(fast=n/sum(n))
+
+  result_slow <- simulate_reliable(n_replicates, n_prey_initial, time_max, model, params)
+  df_slow <- result_slow %>%
+    dplyr::group_by(n_prey_remaining) %>%
+    dplyr::count() %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(slow=n/sum(n))
+
+  df_both <- df_fast %>%
+    dplyr::left_join(df_slow, by="n_prey_remaining") %>%
+    dplyr::mutate(abs_diff=abs(fast-slow))
+
+  expect_true(all(df_both$abs_diff < 0.1))
+
+})
+
 test_that("simulate_study throws errors for invalid inputs", {
 
   # Create a sample valid data frame
