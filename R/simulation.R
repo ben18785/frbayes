@@ -8,10 +8,13 @@
 #' @param model A function that calculates the propensity given the current number of prey and parameters.
 #' @param parameters A list of named parameters required by the model function.
 #'
-#' @return The number of prey remaining at the end of the simulation.
-simulate_single <- function(n_prey_initial, time_max, model, parameters) {
+#' @return A data frame with numbers of prey remaining (and eaten) by time.
+#' @export
+simulate_trajectory <- function(n_prey_initial, time_max, model, parameters) {
   t <- 0
   n_prey_remaining <- n_prey_initial
+  event_times <- c(0)
+  prey_remaining <- c(n_prey_initial)
   while(t < time_max & n_prey_remaining > 0) {
     r <- stats::runif(1)
     propensity <- model(n_prey_remaining, parameters)
@@ -25,12 +28,15 @@ simulate_single <- function(n_prey_initial, time_max, model, parameters) {
     tau <- -log(r) / propensity
     t <- t + tau
     n_prey_remaining <- n_prey_remaining - 1
+    event_times <- c(event_times, t)
+    prey_remaining <- c(prey_remaining, n_prey_remaining)
   }
 
-  if(t <= time_max)
-    n_prey_remaining
-  else
-    n_prey_remaining + 1 # at t = time_max, n_prey_remaining was 1 greater
+  dplyr::tibble(
+    time=event_times,
+    n_prey_remaining=prey_remaining
+  ) %>%
+    dplyr::mutate(n_prey_eaten=n_prey_initial-n_prey_remaining)
 }
 
 
@@ -40,7 +46,7 @@ simulate_single <- function(n_prey_initial, time_max, model, parameters) {
 #' initial conditions and parameters, and returns a summary of the results.
 #'
 #' @param n_replicates An integer representing the number of replicate simulations to perform.
-#' @inheritParams simulate_single
+#' @inheritParams simulate_trajectory
 #'
 #' @return A tibble with columns \code{n_prey_initial}, \code{n_prey_eaten}, and \code{n_prey_remaining},
 #'         summarizing the results of the simulations. Each row represents a single simulation replicate.

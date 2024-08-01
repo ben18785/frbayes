@@ -1,6 +1,29 @@
 # Set default parameters for testing
 params <- list(rate = 100)
 
+simulate_single <- function(n_prey_initial, time_max, model, parameters) {
+  t <- 0
+  n_prey_remaining <- n_prey_initial
+  while(t < time_max & n_prey_remaining > 0) {
+    r <- stats::runif(1)
+    propensity <- model(n_prey_remaining, parameters)
+
+    # Ensure propensity is positive to avoid division by zero or negative time increments
+    if (propensity <= 0) {
+      warning(paste0("Propensity is non-positive. Parameters are ", parameters))
+      break
+    }
+
+    tau <- -log(r) / propensity
+    t <- t + tau
+    n_prey_remaining <- n_prey_remaining - 1
+  }
+
+  if(t <= time_max)
+    n_prey_remaining
+  else
+    n_prey_remaining + 1 # at t = time_max, n_prey_remaining was 1 greater
+}
 
 # this is the previous version of simulate which is easy to read but slow
 simulate_reliable <- function(n_replicates, n_prey_initial, time_max, model, parameters) {
@@ -36,49 +59,35 @@ simulate_reliable <- function(n_replicates, n_prey_initial, time_max, model, par
   result
 }
 
-test_that("simulate_single returns correct number of prey remaining when time_max is not reached", {
-  n_prey_initial <- 10
-  time_max <- 100
-  set.seed(123)  # Set seed for reproducibility
-  result <- simulate_single(n_prey_initial, time_max, model_constant_rate(), params)
-  expect_equal(result, 0)
-})
+mock_model <- function(n_prey, parameters) {
+  # Simple model: returns a constant propensity
+  return(0.1)
+}
 
-test_that("simulate_single handles non-positive propensity by stopping simulation", {
+# Define test cases
+test_that("simulate_trajectory handles inputs and outputs correctly", {
 
-  model_non_positive <- function(n_prey, params) {
-    return(0)  # Always returns zero propensity
-  }
-
-  n_prey_initial <- 10
-  time_max <- 5
-  expect_warning(result <- simulate_single(n_prey_initial, time_max, model_non_positive, params))
-  expect_equal(result, 10)
-})
-
-
-test_that("simulate_single returns initial number of prey when time_max is zero", {
-  n_prey_initial <- 10
-  time_max <- 0
-  result <- simulate_single(n_prey_initial, time_max, model_constant_rate(), params)
-  expect_equal(result, 10)
-})
-
-test_that("simulate_single handles edge case of zero initial prey", {
-  n_prey_initial <- 0
+  # Test valid inputs
+  n_prey_initial <- 5
   time_max <- 10
-  result <- simulate_single(n_prey_initial, time_max, model_constant_rate(), params)
-  expect_equal(result, 0)
-})
+  parameters <- list(rate = 0.1)
 
-test_that("simulate_single handles edge case of propensity being non-positive", {
-  model_zero_propensity <- function(n_prey, params) {
-    return(-1)  # Always returns negative propensity
-  }
+  # Run the simulation
+  result <- simulate_trajectory(
+    n_prey_initial = n_prey_initial,
+    time_max = time_max,
+    model = model_constant_rate(),
+    parameters = parameters
+  )
 
-  n_prey_initial <- 10
-  time_max <- 10
-  expect_warning(simulate_single(n_prey_initial, time_max, model_zero_propensity, params))
+  # Check that the result is a data frame
+  expect_s3_class(result, "data.frame")
+
+  # Check that the result contains the expected columns
+  expect_true(all(c("time", "n_prey_remaining", "n_prey_eaten") %in% names(result)))
+
+  # Check that 'n_prey_remaining' decreases over time
+  expect_true(all(diff(result$n_prey_remaining) <= 0))
 })
 
 test_that("simulate returns a tibble with the correct structure", {
@@ -114,6 +123,14 @@ test_that("simulate returns expected results for given parameters", {
   result <- simulate(n_replicates, n_prey_initial, time_max, model_constant_rate(), params)
 
   # Since the simulation uses random numbers, we check for expected tibble structure and values within expected ranges
+  expect_equal(result$replicate_id, seq_len(n_replicates))
+  expect_equal(result$n_prey_initial, rep(n_prey_initial, n_replicates))
+  expect_true(all(result$n_prey_eaten >= 0 & result$n_prey_eaten <= n_prey_initial))
+  expect_true(all(result$n_prey_remaining >= 0 & result$n_prey_remaining <= n_prey_initial))
+
+  # test simulate runs with n_prey_initial=1
+  n_prey_initial <- 1
+  result <- simulate(n_replicates, n_prey_initial, time_max, model_constant_rate(), params)
   expect_equal(result$replicate_id, seq_len(n_replicates))
   expect_equal(result$n_prey_initial, rep(n_prey_initial, n_replicates))
   expect_true(all(result$n_prey_eaten >= 0 & result$n_prey_eaten <= n_prey_initial))

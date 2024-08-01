@@ -23,31 +23,87 @@ library(tidyr)
 ```
 
 
-In this vignette, we provide an introduction to `frbayes`, a package for fitting
-to functional response data.
+In this vignette, we provide an introduction to `frbayes`, a package for fitting to functional response data.
 
 ## Synthetic study
-We first show how we can fit a functional response model to synthetically generated
-data, where the parameters of the process are known. We assume that data generating
-process is a stochastic Rogers-II-type model, where the process is assumed to
-follow a chemical reaction equation of the form:
+### Stochastic models
+We first show how we can fit a functional response model to synthetically generated data, where the parameters of the process are known. We assume that data generating process is a stochastic Rogers-II-type model, where the process is assumed to follow a chemical reaction equation of the form:
 
 $$
 \text{prey} \xrightarrow{\text{rate}} \text{prey} - 1,
 $$
-
-where the rate of this reaction is given by:
+where $\text{prey}$ means the number of prey remaining at a point in time, and the rate of this reaction is given by:
 
 $$
 \text{rate} = \frac{a \cdot \text{prey}}{1 + a \cdot h \cdot \text{prey}},
 $$
 
-where $a$ is a capture rate and $h$ is a handling time. Here, we assume in our
-synthetic data that $a=2$ and $h=0.1$.
+where $a$ is a capture rate and $h$ is a handling time. Here, we assume the true data generating process is represented by the above model with $a=2$ and $h=0.1$.
 
-We suppose that 100 replicates were performed at initial prey counts of: 5,
-10, 20, 30, 40, and we generate a possible observed dataset for this experimental
-setup.
+We can simulate one such experiment, where we suppose the initial number of prey is 10 and the experiment takes place over a maximum of 5 time units. Here, we show how the number of prey eaten (10 - the number of prey remaining) increases with time. When the number of prey eaten reaches 10, the initial number of prey, there are no more prey to eat and the experiment ends.
+```{r}
+# rogersII parameters
+true_parameters <- list(a=2, h=0.1)
+
+# stochastic simulation
+df_single_replicate <- simulate_trajectory(
+  n_prey_initial = 10,
+  time_max = 5,
+  model = model_rogersII(),
+  parameters = true_parameters
+)
+
+# plot
+df_single_replicate %>% 
+  ggplot(aes(x=time, y=n_prey_eaten)) +
+  geom_step() +
+  scale_y_continuous(n.breaks = 10) +
+  scale_x_continuous(limits = c(0, 5))
+```
+Our simulation method is _stochastic_, meaning we get a variety of such trajectories each time the experiment is run. We show now 10 such trajectories.
+```{r}
+# generate many trajectories
+n_trajectories <- 10
+for(i in 1:n_trajectories) {
+  
+  df_single_replicate <- simulate_trajectory(
+    n_prey_initial = 10,
+    time_max = 10,
+    model = model_rogersII(),
+    parameters = true_parameters
+  ) %>% 
+    dplyr::mutate(trajectory_id=i)
+  
+  if(i == 1)
+    df_all_trajectories <- df_single_replicate
+  else
+    df_all_trajectories <- df_all_trajectories %>% 
+      dplyr::bind_rows(df_single_replicate)
+}
+
+# plot
+df_all_trajectories %>% 
+  ggplot(aes(x=time,
+             y=n_prey_eaten,
+             group=as.factor(trajectory_id))) +
+  geom_step(alpha=0.5) +
+  scale_y_continuous(n.breaks = 10)
+```
+### Typical experiment setup
+In a typical experiment, there is a time chosen at which to observe the number of prey eaten. Here, we assume this is at $\text{time}=1$. This effectively means that we slice through the trajectories at this time and record the number of prey at that point: here, this gives us a number of prey eaten that roughly ranges around the 4-9 range.
+```{r}
+# plot slice
+df_all_trajectories %>% 
+  ggplot(aes(x=time,
+             y=n_prey_eaten,
+             group=as.factor(trajectory_id))) +
+  geom_step(alpha=0.5) +
+  scale_y_continuous(n.breaks = 10) +
+  geom_vline(xintercept = 1, linetype=2, colour="orange")
+```
+Usually, experiments then repeat this exercise but under a variety of experimental conditions, particularly across a range of initial prey counts.
+
+We now replicate one such experiment. We suppose that 100 replicates were performed at initial prey counts of: 5, 10, 20, 30, 40, and that the system was observed at $time=1$. Using this experimental setup, we can simulate the output of running one such experiment.
 ```{r}
 # experiment details
 experimental_setup <- data.frame(
@@ -56,7 +112,6 @@ experimental_setup <- data.frame(
 )
 
 # generate synthetic data
-true_parameters <- list(a=2, h=0.1)
 df <- simulate_study(
   data=experimental_setup,
   time_max = 1,
@@ -70,7 +125,8 @@ df %>%
   geom_jitter(height = 0.3)
 ```
 
-We now fit a model to these data using maximum likelihood estimation. To do so, we use the `log_probability` function. We first show how the log-likelihood varies as $a$ is varied with $h$ fixed at its true value.
+### Fitting to an experiment's data
+We now fit a model to these data using maximum likelihood estimation. To do so, we use the `log_probability` function. We first show how the log-likelihood varies as $a$ is varied with $h$ fixed at its true value. The log-likelihood is a little rough (owing to the stochasticity in how we calculate it), but it is peaked near the value used to generate the data.
 ```{r}
 as <- seq(1, 4, 0.1)
 log_likelihood <- vector(length = length(as))
@@ -88,7 +144,9 @@ for(i in seq_along(as)) {
 tibble(a=as, log_likelihood=log_likelihood) %>% 
   ggplot(aes(x=a, y=log_likelihood)) +
   geom_line() +
-  geom_vline(xintercept = true_parameters$a, linetype=2)
+  geom_vline(xintercept = true_parameters$a,
+             linetype=2,
+             colour="orange")
 ```
 
 Similarly so, for $h$.
@@ -137,7 +195,7 @@ ggplot(parameter_combinations, aes(x = a, y = h, fill = z)) +
 ```
 
 
-We now perform optimisation to estimate $(a,h)$.
+We now perform optimisation to estimate a single maximum likelihood set of $(a,h)$.
 ```{r}
 # set a function to minimise
 f_likelihood <- function(theta) {
@@ -178,8 +236,8 @@ ggplot(parameter_combinations, aes(x = a, y = h, fill = z)) +
   geom_contour(aes(z = z), color = "white")
 ```
 
-
-We now examine the fit of the model to data.
+### Model diagnostics
+We now examine the fit of the model to data by generating data by simulation using the parameter estimates we obtained by optimisation. From this view, the fits look reasonable.
 ```{r}
 experimental_setup <- data.frame(
   n_prey_initial = c(5, 10, 20, 30, 40),
@@ -198,10 +256,12 @@ df_sim <- simulate_study(
 df %>%
   ggplot(aes(x=as.factor(n_prey_initial), y=n_prey_eaten)) +
   geom_violin(data=df_sim) +
-  geom_jitter(height = 0.3) +
+  geom_jitter(height = 0.3, alpha=0.8) +
   xlab("n_prey_initial")
 ```
-We can also plot the empirical cumulative distribution function (eCDF) versus the model-simulated eCDFs. Here, we plot these for each value of `n_prey_initial` across 100 bootstrapped samples. The model fit isn't perfect perhaps owing to the difficulty of maximising the likelihood here.
+We can also plot the empirical cumulative distribution function (eCDF) versus the model-simulated eCDFs. If the model fitted to the data is reasonable, we would expect these lines to overlap with the $y=x$ line.
+
+Here, we plot these for each value of `n_prey_initial` across 100 bootstrapped samples. The model fit isn't perfect perhaps owing to the difficulty of maximising the likelihood here.
 ```{r}
 # generate ecdfs
 n_bootstraps <- 100
@@ -221,7 +281,7 @@ df_ecdfs_both %>%
   geom_abline(linetype=2, colour="orange")
 ```
 
-As a sanity check, we repeat these checks using the true parameter values. This shows a reasonable fit.
+As a sanity check, we repeat these checks using the true parameter values. This shows a slightly more reasonable fit.
 ```{r}
 # generate ecdfs
 n_bootstraps <- 100
