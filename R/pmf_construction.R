@@ -197,13 +197,9 @@ log_probability_single_prey_initial <- function(
     parameters,
     ns_prey_remaining, n_prey_initial,
     model, time_max,
-    n_replicates=1000, alpha=1,
-    is_efficient=TRUE) {
+    n_replicates=1000, alpha=1) {
 
-  if(is_efficient)
-    simulation_result <- simulate_efficient(n_replicates, n_prey_initial, time_max, model, parameters)
-  else
-    simulation_result <- simulate(n_replicates, n_prey_initial, time_max, model, parameters)
+  simulation_result <- simulate(n_replicates, n_prey_initial, time_max, model, parameters)
   log_prob_function <- create_pmf_log(simulation_result, n_prey_initial, alpha)
 
   log_prob <- 0
@@ -264,8 +260,7 @@ log_probability <- function(
     parameters,
     data,
     model,
-    time_max=1, n_replicates=1000, alpha=1,
-    is_efficient=TRUE) {
+    time_max=1, n_replicates=1000, alpha=1) {
 
   # Validate inputs
   if (!is.data.frame(data) && !tibble::is_tibble(data)) {
@@ -305,8 +300,7 @@ log_probability <- function(
       model = model,
       time_max = time_max,
       n_replicates = n_replicates,
-      alpha = alpha,
-      is_efficient = is_efficient
+      alpha = alpha
     )
 
     log_prob <- log_prob + log_prob_increment

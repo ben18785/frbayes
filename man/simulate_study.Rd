@@ -37,9 +37,9 @@ if any other input validations fail, the function will stop with an error messag
 }
 \examples{
 # Example usage (assuming appropriate model and parameters):
-data <- data.frame(prey_initial = c(10, 20, 30), n_replicates = c(100, 100, 100))
+data <- data.frame(n_prey_initial = c(10, 20, 30), n_replicates = c(100, 100, 100))
 time_max <- 10
-model <- model_constant()
+model <- model_constant_rate()
 parameters <- list(rate = 0.1)
 result <- simulate_study(data, time_max, model, parameters)
 }

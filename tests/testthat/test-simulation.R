@@ -1,6 +1,41 @@
 # Set default parameters for testing
 params <- list(rate = 100)
 
+
+# this is the previous version of simulate which is easy to read but slow
+simulate_reliable <- function(n_replicates, n_prey_initial, time_max, model, parameters) {
+
+  if (!is.function(model)) {
+    stop("model must be a function")
+  }
+
+  if (!is.numeric(n_replicates) || n_replicates <= 0 || round(n_replicates) != n_replicates) {
+    stop("n_replicates must be a positive integer")
+  }
+
+  if (!is.numeric(n_prey_initial) || n_prey_initial <= 0 || round(n_prey_initial) != n_prey_initial) {
+    stop("n_prey_initial must be a positive integer")
+  }
+
+  if (!is.numeric(time_max) || time_max <= 0) {
+    stop("time_max must be a positive number")
+  }
+
+  n_prey_remaining <- vector(length = n_replicates)
+  for(i in seq_along(n_prey_remaining)) {
+    n_prey_remaining[i] <- simulate_single(n_prey_initial, time_max, model, parameters)
+  }
+
+  result <- dplyr::tibble(
+    replicate_id = seq_len(n_replicates),
+    n_prey_initial = n_prey_initial,
+    n_prey_eaten = n_prey_initial - n_prey_remaining,
+    n_prey_remaining = n_prey_remaining
+  )
+
+  result
+}
+
 test_that("simulate_single returns correct number of prey remaining when time_max is not reached", {
   n_prey_initial <- 10
   time_max <- 100
