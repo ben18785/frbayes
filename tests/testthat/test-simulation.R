@@ -222,3 +222,24 @@ test_that("simulate_study throws errors for invalid inputs", {
   )
   expect_error(simulate_study(invalid_data, 1, mock_model, list()), "Dataframe should have one row per n_prey_initial.")
 })
+
+test_that("simulate_study produces reasonable data", {
+
+  experimental_setup <- data.frame(
+    n_prey_initial = c(5, 10, 20, 30, 40),
+    n_replicates = 100
+  )
+
+  # generate synthetic data
+  true_parameters <- list(a=2, h=0.1)
+  df <- simulate_study(
+    data=experimental_setup,
+    time_max = 1,
+    model = model_rogersII(),
+    parameters = true_parameters
+  )
+
+  expect_equal(nrow(df), length(experimental_setup$n_prey_initial) * experimental_setup$n_replicates[1])
+  cnames_exp <- c("replicate_id", "n_prey_initial", "n_prey_eaten", "n_prey_remaining")
+  expect_true(all(cnames_exp %in% colnames(df)))
+})
