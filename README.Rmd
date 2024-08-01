@@ -33,20 +33,17 @@ devtools::install_github("ben18785/frbayes")
 ```
 
 ## Example
-We first show how we can examine the fit of a functional response model to synthetically generated
-data, where the parameters of the process are known. We assume that data generating
-process is a stochastic Rogers-II-type model, where the process is assumed to
-follow a chemical reaction equation of the form:
+We first show how we can examine the fit of a functional response model to synthetically generated data, where the parameters of the process are known. We assume that data generating process is a stochastic Rogers-II-type model, where the process is assumed to follow a chemical reaction equation of the form:
 
-\begin{equation}
+$$
 \text{prey} \xrightarrow{\text{rate}} \text{prey} - 1,
-\end{equation}
+$$
 
 where the rate of this reaction is given by:
 
-\begin{equation}
+$$
 \text{rate} = \frac{a \cdot \text{prey}}{1 + a \cdot h \cdot \text{prey}},
-\end{equation}
+$$
 
 where $a$ is a capture rate and $h$ is a handling time. Here, we assume in our
 synthetic data that $a=2$ and $h=0.1$.

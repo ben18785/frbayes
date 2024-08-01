@@ -96,6 +96,8 @@ simulate <- function(n_replicates, n_prey_initial, time_max, model, parameters) 
 
   # Calculate cumulative sums once for all replicates
   cumsum_matrix <- apply(tau_matrix, 2, cumsum)
+  if(is.null(dim(cumsum_matrix)))
+    cumsum_matrix <- matrix(cumsum_matrix, nrow = 1)
 
   # Find the number of prey remaining
   prey_remaining <- apply(cumsum_matrix, 2, function(times) {

@@ -30,7 +30,15 @@ known. We assume that data generating process is a stochastic
 Rogers-II-type model, where the process is assumed to follow a chemical
 reaction equation of the form:
 
+$$
+\text{prey} \xrightarrow{\text{rate}} \text{prey} - 1,
+$$
+
 where the rate of this reaction is given by:
+
+$$
+\text{rate} = \frac{a \cdot \text{prey}}{1 + a \cdot h \cdot \text{prey}},
+$$
 
 where $a$ is a capture rate and $h$ is a handling time. Here, we assume
 in our synthetic data that $a=2$ and $h=0.1$.
