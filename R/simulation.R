@@ -39,10 +39,12 @@ simulate_trajectory <- function(n_prey_initial, time_max, model, parameters) {
     propensity <- model(n_prey_remaining, parameters)
 
     # Ensure propensity is positive to avoid division by zero or negative time increments
+    # nocov start
     if (propensity <= 0) {
       warning(paste0("Propensity is non-positive. Parameters are ", parameters))
       break
     }
+    # nocov end
 
     tau <- -log(r) / propensity
     t <- t + tau
